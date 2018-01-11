@@ -1,0 +1,43 @@
+// Place your settings in this file to overwrite the default settings
+{
+    "editor.wordWrap": "on",
+    "editor.formatOnSave": true,
+    "editor.snippetSuggestions": "inline",
+    "editor.tabSize": 4,
+    "editor.tabCompletion": true,
+    "files.eol": "\r\n",
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/.vscode/chrome": true,
+        "**/bin/Release": true
+    },
+    "files.insertFinalNewline": true,
+    "html.format.endWithNewline": true,
+    "beautify.language": {
+        "js": {
+            "type": [
+                "javascript",
+                "json"
+            ],
+            "filename": [
+                ".jshintrc",
+                ".jsbeautify"
+            ],
+            "ext": [
+                "js"
+            ]
+        },
+        "css": [
+            "css",
+            "scss"
+        ],
+        "html": [
+            "htm",
+            "html"
+        ]
+    }
+}
