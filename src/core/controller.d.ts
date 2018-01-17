@@ -1,5 +1,7 @@
 import { IRoute } from './route';
 
+// TODO: document.
+
 /**
  * Defines properties and methods for an implementation of a controller.
  *

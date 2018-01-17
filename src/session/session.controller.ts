@@ -1,8 +1,12 @@
-import { Request, Response, NextFunction, IRoute } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 import { HttpVerbs } from '../core/http-verbs.enum';
 import { BaseController } from '../core/base.controller';
+import { IStandardResponse } from '../core/standard-response';
 import { LogOnInfo } from './logOnInfo.model';
+import { IJwtAuthenticationService } from './jwt-authentication.service.d';
+import { ISession } from './session.model';
+import { IUser } from './user.model';
 
 /**
  * Represents a session controller.
@@ -12,25 +16,33 @@ import { LogOnInfo } from './logOnInfo.model';
  * @extends {BaseController}
  */
 export class SessionController extends BaseController {
+    private authenticationService: IJwtAuthenticationService;
+
     /**
      * Creates an instance of SessionController.
+     * @param {IJwtAuthenticationService} authenticationService The authentication service.
      * @memberof SessionController
      */
-    constructor() {
+    constructor(authenticationService: IJwtAuthenticationService) {
         super('/session', 1);
+        this.authenticationService = authenticationService;
+
         this.routes.push(
             {
                 path: this.defaultPath,
                 handler: this.postSession,
-                verbs: [HttpVerbs.POST]
+                verbs: [HttpVerbs.POST],
+                isAnonymous: true
             }, {
                 path: this.defaultPath,
                 handler: this.getSession,
-                verbs: [HttpVerbs.GET]
+                verbs: [HttpVerbs.GET],
+                isAnonymous: false
             }, {
                 path: this.defaultPath,
                 handler: this.deleteSession,
-                verbs: [HttpVerbs.DELETE]
+                verbs: [HttpVerbs.DELETE],
+                isAnonymous: false
             });
     }
 
@@ -49,8 +61,17 @@ export class SessionController extends BaseController {
             return;
         }
 
-        // TODO: Actually create a session.
-        res.json({ ok: true });
+        this.authenticationService.logOn(logOnInfo).subscribe(token => {
+            const result: IStandardResponse = {
+                success: token !== null,
+                message: token !== null ? 'You have been successfully authenticated.' : 'Authentication failed. E-mail address or password incorrect.',
+                data: {
+                    token: token
+                }
+            };
+
+            res.json(result);
+        });
     }
 
     /**
@@ -62,7 +83,18 @@ export class SessionController extends BaseController {
      * @memberof SessionController
      */
     public getSession(req: Request, res: Response, next: NextFunction): void {
-        // TODO: Add code to get a session.
+        const user: IUser = <IUser>req.user;
+        const result: ISession = {
+            email: user.email,
+            fullName: user.fullName
+        };
+
+        const response: IStandardResponse = {
+            success: true,
+            data: result
+        };
+
+        res.json(response);
     }
 
     /**
@@ -74,6 +106,6 @@ export class SessionController extends BaseController {
      * @memberof SessionController
      */
     public deleteSession(req: Request, res: Response, next: NextFunction): void {
-        // TODO: Add code to delete a session.
+        // TODO: Add code to delete a session, aka blacklist the JWT token.
     }
 }
