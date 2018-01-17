@@ -9,7 +9,7 @@ import { HttpVerbs } from './http-verbs.enum';
  */
 export interface IRoute {
     /**
-     * Gets or sets the path that sjpi;d be matched for this route.
+     * Gets or sets the path that should be matched for this route.
      *
      * @type {(string | RegExp | (string | RegExp)[])}
      * @memberof IRoute
