@@ -10,6 +10,7 @@ import { ExtractJwt, Strategy, StrategyOptions, VerifiedCallback } from 'passpor
 
 import { IController } from './core/controller';
 import { HttpVerbs } from './core/http-verbs.enum';
+import { MongoDbHelper } from './core/mongo-db-helper';
 import { IUser, User } from './session/user.model';
 
 // This is a requirement of Mongoose to set which promise framework it will use.
@@ -64,7 +65,7 @@ export class App {
 
         // Sets up the MongoDB connection.
         console.log('Setting up the MongoDB connection...');
-        App.openDatabaseConnection(mongoose, mongoDbUri);
+        MongoDbHelper.openDatabaseConnection(mongoose, mongoDbUri);
 
         // Sets up what happens when the application ends.
         process.on('SIGINT', () => {
@@ -147,31 +148,6 @@ export class App {
      */
     public addControllers(controllers: IController[]): void {
         controllers.forEach((c) => this.addController(c));
-    }
-
-    /**
-     * Opens the database connection using the given mongoose client and the given MongoDB URI.
-     *
-     * @static
-     * @param {Mongoose} mongooseClient The mongoose client.
-     * @param {string} mongoDbUri The MongoDB URI.
-     * @returns {Mongoose} The mongoose client with the opened connection.
-     * @memberof App
-     */
-    private static openDatabaseConnection(mongooseClient: Mongoose, mongoDbUri: string): Mongoose {
-        mongooseClient.connect(mongoDbUri, { useMongoClient: true });
-        const mongoDbConnection: Connection = mongooseClient.connection;
-        mongoDbConnection.on('connected', () => {
-            console.log('Connected to MongoDB.');
-        });
-        mongoDbConnection.on('error', (err: any) => {
-            console.log(`There was a problem connecting to MongoDB: ${err}`);
-        });
-        mongoDbConnection.on('disconnected', () => {
-            console.log('Disconnected from MongoDB.');
-        });
-
-        return mongooseClient;
     }
 
     /**

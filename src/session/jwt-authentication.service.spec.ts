@@ -1,7 +1,7 @@
 import { Mockgoose } from 'mockgoose';
 import * as mongoose from 'mongoose';
 
-import { TestHelper } from '../core/test-helper';
+import { MongoDbHelper } from '../core/mongo-db-helper';
 import { JwtAuthenticationService } from './jwt-authentication.service';
 import { LogOnInfo } from './logOnInfo.model';
 import { IUser, User } from './user.model';
@@ -9,7 +9,6 @@ import { IUser, User } from './user.model';
 // This is a requirement of Mongoose to set which promise framework it will use.
 (mongoose as any).Promise = global.Promise;
 
-let mockgoose: Mockgoose;
 let originalJasmineTimeout: number;
 
 const validPassword: string = 'P@ssw0rd';
@@ -17,7 +16,6 @@ const invalidPassword: string = 'bladiblah';
 const confirmedValidUser: string = 'someone@somewhere.com';
 const unconfirmedValidUser: string = 'someone-else@somewhere.com';
 const invalidUser: string = 'bladibla@somewhere.com';
-const confirmationToken: string = 'dbc9fa439a1940419efa24c8644ceaee23de9608b4a5fd18e520e38e44c367fc';
 
 describe('JWT Authentication Service', () => {
     beforeAll((done) => {
@@ -28,47 +26,23 @@ describe('JWT Authentication Service', () => {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = newJasmineTimeout;
 
         // Sets up a mocked instance of MongoDB to be used through Mongoose.
-        mockgoose = TestHelper.SetUpMockgoose(mongoose);
-        mockgoose.prepareStorage().then(() => {
-            TestHelper.OpenDatabaseConnection(mongoose);
-            done();
-        });
+        MongoDbHelper.openMockDatabaseConnection(
+            mongoose,
+            'mongodb://localhost/mock',
+            process.env.HTTP_PROXY !== undefined ? process.env.HTTP_PROXY as string : null)
+            .subscribeOnCompleted(() => {
+                done();
+            });
     });
 
     beforeEach((done) => {
         // Creates the mocked users that can be used during tests.
-        User.create(
-            [{
-                email: confirmedValidUser,
-                password: validPassword,
-                fullName: 'Confirmed User',
-                createdAt: new Date(2018, 0, 1)
-            },
-            {
-                email: unconfirmedValidUser,
-                password: validPassword,
-                fullName: 'Unconfirmed User',
-                createdAt: new Date(2018, 0, 1)
-            }],
-            (err: any, users: IUser[]) => {
-                if (err) {
-                    console.log(`There was a problem creating users for JwtAuthenticationService test: ${err}`);
-                    throw err;
-                }
-
-                const validUser = users.find((u) => u.email === confirmedValidUser);
-                if (validUser) {
-                    validUser.isEmailConfirmed = true;
-                    validUser.save().then(() => {
-                        done();
-                    });
-                }
-            });
+        MongoDbHelper.createMockData().subscribeOnCompleted(() => { done(); });
     });
 
     afterEach((done) => {
         // Resets the mocked database, deleting all users and any other entries.
-        mockgoose.helper.reset().then(() => {
+        MongoDbHelper.resetMockData().subscribeOnCompleted(() => {
             done();
         });
     });
