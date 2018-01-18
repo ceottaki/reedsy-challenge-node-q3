@@ -1,8 +1,8 @@
-import * as mongoose from 'mongoose';
-import { Schema, SchemaDefinition, HookNextFunction, Document, Error, Model } from 'mongoose';
 import * as crypto from 'crypto';
-import { Observable } from 'rx';
 import * as fs from 'fs';
+import * as mongoose from 'mongoose';
+import { Document, Error, HookNextFunction, Model, Schema, SchemaDefinition } from 'mongoose';
+import { Observable } from 'rx';
 
 /**
  * Defines properties and methods for an implementation of a user.
@@ -69,7 +69,7 @@ export interface IUser extends Document {
     modifiedAt?: Date;
 
     /**
-     * When implemented it should compare this user's password (which should be encrypted) with the given plaintext password.
+     * When implemented it should compare this user's password (encrypted) with the given plaintext password.
      *
      * @param {string} password
      * @returns {Observable<boolean>}
@@ -98,112 +98,6 @@ export class UserSchema extends Schema {
         this.pre('save', this.encryptUserPassword);
         this.pre('save', this.createEmailConfirmationToken);
         this.methods.comparePassword = this.comparePassword;
-    }
-
-    /**
-     * Sets the created and modified dates for a user when saving it, to be used as a hook sync function pre-save.
-     *
-     * @private
-     * @param {HookNextFunction} next The next hook function.
-     * @returns {*} The result of the next hook function.
-     * @memberof UserSchema
-     */
-    private setCreatedModified(next: HookNextFunction): any {
-        const user: IUser = this as any;
-        if (user.isNew) {
-            user.createdAt = new Date();
-        }
-
-        user.modifiedAt = new Date();
-        return next();
-    }
-
-    /**
-     * Encrypts the user password if the password has been modified in order to only save encrypted passwords, to be used as a hook sync function pre-save.
-     *
-     * @private
-     * @param {HookNextFunction} next The next hook function.
-     * @returns {*} The result of the next hook function.
-     * @memberof UserSchema
-     */
-    private encryptUserPassword(next: HookNextFunction): any {
-        const user: IUser = this as any;
-        if (user.isModified('password') || user.isNew) {
-            crypto.randomBytes(128, function (err: Error, salt: Buffer) {
-                if (err) {
-                    return next(err);
-                }
-
-                crypto.pbkdf2(user.password, salt, 9973, 512, 'sha512', function (err: Error, hash: Buffer) {
-                    if (err) {
-                        return next(err);
-                    }
-
-                    const combined: Buffer = new Buffer(hash.length + salt.length + 8);
-                    combined.writeUInt32BE(salt.length, 0, true);
-                    combined.writeUInt32BE(9973, 4, true);
-                    salt.copy(combined, 8);
-                    hash.copy(combined, salt.length + 8);
-                    user.password = combined.toString('base64');
-                    return next();
-                });
-            });
-        }
-        else {
-            return next();
-        }
-    }
-
-    /**
-     * Creates an e-mail confirmation token for a user if it is a new user or if the e-mail has been modified, to be used as a hook sync function pre-save.
-     *
-     * @private
-     * @param {HookNextFunction} next The next hook function.
-     * @returns {*} The result of the next hook function.
-     * @memberof UserSchema
-     */
-    private createEmailConfirmationToken(next: HookNextFunction): any {
-        const user: IUser = this as any;
-        if (!user.isNew && !user.isModified('email')) {
-            return next();
-        }
-
-        crypto.randomBytes(32, function (err: Error, salt: Buffer) {
-            if (err) {
-                return next(err);
-            }
-
-            user.isEmailConfirmed = false;
-            user.emailConfirmationToken = salt.toString('hex');
-            return next();
-        });
-    }
-
-    /**
-     * Compares a given plaintext password to the user's encrypted password, to be used by an implementation of IUser.
-     *
-     * @private
-     * @param {string} password The plaintext password to be compared.
-     * @returns {Observable<boolean>} An observable with a value indicating whether the passwords match.
-     * @memberof UserSchema
-     */
-    private comparePassword(password: string): Observable<boolean> {
-        const user: IUser = this as any;
-        const combined: Buffer = new Buffer(user.password, 'base64');
-        const saltBytes: number = combined.readUInt32BE(0);
-        const hashBytes: number = combined.length - saltBytes - 8;
-        const iterations: number = combined.readUInt32BE(4);
-        const salt: Buffer = combined.slice(8, saltBytes + 8);
-        const hash: string = combined.toString('base64', saltBytes + 8);
-
-        const pbkdf2 = Observable.fromNodeCallback<Buffer>(crypto.pbkdf2)
-        return pbkdf2(password, salt, iterations, hashBytes, 'sha512').map(verify => {
-            if (!verify) {
-                return false;
-            }
-
-            return verify.toString('base64') === hash;
-        });
     }
 
     /**
@@ -249,6 +143,113 @@ export class UserSchema extends Schema {
         };
 
         return result;
+    }
+
+    /**
+     * Sets the created and modified dates for a user when saving it, to be used as a hook sync function pre-save.
+     *
+     * @private
+     * @param {HookNextFunction} next The next hook function.
+     * @returns {*} The result of the next hook function.
+     * @memberof UserSchema
+     */
+    private setCreatedModified(next: HookNextFunction): any {
+        const user: IUser = this as any;
+        if (user.isNew) {
+            user.createdAt = new Date();
+        }
+
+        user.modifiedAt = new Date();
+        return next();
+    }
+
+    /**
+     * Encrypts the user password if the password has been modified in order to only save encrypted passwords,
+     * to be used as a hook sync function pre-save.
+     *
+     * @private
+     * @param {HookNextFunction} next The next hook function.
+     * @returns {*} The result of the next hook function.
+     * @memberof UserSchema
+     */
+    private encryptUserPassword(next: HookNextFunction): any {
+        const user: IUser = this as any;
+        if (user.isModified('password') || user.isNew) {
+            crypto.randomBytes(128, (err: Error, salt: Buffer) => {
+                if (err) {
+                    return next(err);
+                }
+
+                crypto.pbkdf2(user.password, salt, 9973, 512, 'sha512', (pbkdf2Error: Error, hash: Buffer) => {
+                    if (pbkdf2Error) {
+                        return next(pbkdf2Error);
+                    }
+
+                    const combined: Buffer = new Buffer(hash.length + salt.length + 8);
+                    combined.writeUInt32BE(salt.length, 0, true);
+                    combined.writeUInt32BE(9973, 4, true);
+                    salt.copy(combined, 8);
+                    hash.copy(combined, salt.length + 8);
+                    user.password = combined.toString('base64');
+                    return next();
+                });
+            });
+        } else {
+            return next();
+        }
+    }
+
+    /**
+     * Creates an e-mail confirmation token for a user if it is a new user or if the e-mail has been modified,
+     * to be used as a hook sync function pre-save.
+     *
+     * @private
+     * @param {HookNextFunction} next The next hook function.
+     * @returns {*} The result of the next hook function.
+     * @memberof UserSchema
+     */
+    private createEmailConfirmationToken(next: HookNextFunction): any {
+        const user: IUser = this as any;
+        if (!user.isNew && !user.isModified('email')) {
+            return next();
+        }
+
+        crypto.randomBytes(32, (err: Error, salt: Buffer) => {
+            if (err) {
+                return next(err);
+            }
+
+            user.isEmailConfirmed = false;
+            user.emailConfirmationToken = salt.toString('hex');
+            return next();
+        });
+    }
+
+    /**
+     * Compares a given plaintext password to the user's encrypted password, to be used by an implementation of IUser.
+     *
+     * @private
+     * @param {string} password The plaintext password to be compared.
+     * @returns {Observable<boolean>} An observable with a value indicating whether the passwords match.
+     * @memberof UserSchema
+     */
+    private comparePassword(password: string): Observable<boolean> {
+        const user: IUser = this as any;
+        const combined: Buffer = new Buffer(user.password, 'base64');
+        const saltBytes: number = combined.readUInt32BE(0);
+        const hashBytes: number = combined.length - saltBytes - 8;
+        const iterations: number = combined.readUInt32BE(4);
+        const salt: Buffer = combined.slice(8, saltBytes + 8);
+        const hash: string = combined.toString('base64', saltBytes + 8);
+
+        const pbkdf2 = Observable.fromNodeCallback<Buffer>(crypto.pbkdf2);
+        return pbkdf2(password, salt, iterations, hashBytes, 'sha512').map((verify) => {
+            if (!verify) {
+                return false;
+            }
+
+            return verify.toString('base64') === hash;
+        });
     }
 }
 

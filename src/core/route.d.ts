@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { HttpVerbs } from './http-verbs.enum';
 
 /**
@@ -14,7 +14,7 @@ export interface IRoute {
      * @type {(string | RegExp | (string | RegExp)[])}
      * @memberof IRoute
      */
-    path: string | RegExp | (string | RegExp)[];
+    path: string | RegExp | Array<string | RegExp>;
 
     /**
      * Gets or sets the function that should be called to handle the route.

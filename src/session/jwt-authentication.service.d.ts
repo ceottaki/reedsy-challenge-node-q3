@@ -13,7 +13,7 @@ export interface IJwtAuthenticationService {
      * When implemented it should log on a user with the given log on information.
      *
      * @param {LogOnInfo} logOnInfo The log on information for a user.
-     * @returns {Observable<string | null>} An observable with the encoded JWT token if the user was successfully authenticated; null otherwise.
+     * @returns {Observable<string | null>} An observable with the token if successfully authenticated; null otherwise.
      * @memberof IAuthenticationService
      */
     logOn(logOnInfo: LogOnInfo): Observable<string | null>;

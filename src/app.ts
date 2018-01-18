@@ -1,18 +1,19 @@
-import * as express from 'express';
 import * as bodyParser from 'body-parser';
-import * as passport from 'passport';
+import * as express from 'express';
 import * as mongoose from 'mongoose';
+import * as passport from 'passport';
+
+import { NextFunction, Request, Response, Router } from 'express';
 import { Connection, Mongoose } from 'mongoose';
 import { PassportStatic } from 'passport';
-import { Strategy, StrategyOptions, ExtractJwt, VerifiedCallback } from 'passport-jwt';
-import { Request, Response, NextFunction, Router } from 'express';
+import { ExtractJwt, Strategy, StrategyOptions, VerifiedCallback } from 'passport-jwt';
 
 import { IController } from './core/controller';
 import { HttpVerbs } from './core/http-verbs.enum';
 import { IUser, User } from './session/user.model';
 
 // This is a requirement of Mongoose to set which promise framework it will use.
-(<any>mongoose).Promise = global.Promise;
+(mongoose as any).Promise = global.Promise;
 
 /**
  * Represents the entry point to the application.
@@ -21,9 +22,9 @@ import { IUser, User } from './session/user.model';
  * @class App
  */
 export class App {
+    public readonly port: number;
     private express: express.Application;
     private router: Router;
-    public readonly port: number;
 
     /**
      * Creates an instance of App.
@@ -48,9 +49,9 @@ export class App {
 
         // Sets up CORS.
         console.log('Setting up CORS...');
-        this.express.use(function (req: Request, res: Response, next: NextFunction) {
-            res.header("Access-Control-Allow-Origin", "*");
-            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+        this.express.use((req: Request, res: Response, next: NextFunction) => {
+            res.header('Access-Control-Allow-Origin', '*');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
             next();
         });
 
@@ -66,8 +67,8 @@ export class App {
         App.openDatabaseConnection(mongoose, mongoDbUri);
 
         // Sets up what happens when the application ends.
-        process.on('SIGINT', function () {
-            mongoose.connection.close(function () {
+        process.on('SIGINT', () => {
+            mongoose.connection.close(() => {
                 console.log('Closing MongoDB connection.');
                 process.exit(0);
             });
@@ -83,7 +84,7 @@ export class App {
         this.express.use('/api', this.router);
 
         console.log('Application starting on port ' + this.port.toString() + '...');
-        this.express.listen(this.port, function () {
+        this.express.listen(this.port, () => {
             console.log('Application has started and is listening.');
         });
     }
@@ -95,28 +96,43 @@ export class App {
      * @memberof App
      */
     public addController(controller: IController): void {
-        controller.routes.forEach(route => {
+        controller.routes.forEach((route) => {
             const routePath = controller.useApiVersionInPath ? `/v${controller.apiVersion}${route.path}` : route.path;
-            route.verbs.forEach(v => {
+            route.verbs.forEach((v) => {
                 switch (v) {
                     case HttpVerbs.ALL:
-                        this.router.all(routePath, route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }), route.handler.bind(controller));
+                        this.router.all(
+                            routePath,
+                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            route.handler.bind(controller));
                         break;
 
                     case HttpVerbs.DELETE:
-                        this.router.delete(routePath, route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }), route.handler.bind(controller));
+                        this.router.delete(
+                            routePath,
+                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            route.handler.bind(controller));
                         break;
 
                     case HttpVerbs.GET:
-                        this.router.get(routePath, route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }), route.handler.bind(controller));
+                        this.router.get(
+                            routePath,
+                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            route.handler.bind(controller));
                         break;
 
                     case HttpVerbs.POST:
-                        this.router.post(routePath, route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }), route.handler.bind(controller));
+                        this.router.post(
+                            routePath,
+                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            route.handler.bind(controller));
                         break;
 
                     case HttpVerbs.PUT:
-                        this.router.put(routePath, route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }), route.handler.bind(controller));
+                        this.router.put(
+                            routePath,
+                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            route.handler.bind(controller));
                         break;
                 }
             });
@@ -130,32 +146,32 @@ export class App {
      * @memberof App
      */
     public addControllers(controllers: IController[]): void {
-        controllers.forEach(c => this.addController(c));
+        controllers.forEach((c) => this.addController(c));
     }
 
     /**
      * Opens the database connection using the given mongoose client and the given MongoDB URI.
      *
      * @static
-     * @param {Mongoose} mongoose The mongoose client.
+     * @param {Mongoose} mongooseClient The mongoose client.
      * @param {string} mongoDbUri The MongoDB URI.
      * @returns {Mongoose} The mongoose client with the opened connection.
      * @memberof App
      */
-    private static openDatabaseConnection(mongoose: Mongoose, mongoDbUri: string): Mongoose {
-        mongoose.connect(mongoDbUri, { useMongoClient: true });
-        const mongoDbConnection: Connection = mongoose.connection;
-        mongoDbConnection.on('connected', function () {
+    private static openDatabaseConnection(mongooseClient: Mongoose, mongoDbUri: string): Mongoose {
+        mongooseClient.connect(mongoDbUri, { useMongoClient: true });
+        const mongoDbConnection: Connection = mongooseClient.connection;
+        mongoDbConnection.on('connected', () => {
             console.log('Connected to MongoDB.');
         });
-        mongoDbConnection.on('error', function (err: any) {
+        mongoDbConnection.on('error', (err: any) => {
             console.log(`There was a problem connecting to MongoDB: ${err}`);
         });
-        mongoDbConnection.on('disconnected', function () {
+        mongoDbConnection.on('disconnected', () => {
             console.log('Disconnected from MongoDB.');
         });
 
-        return mongoose;
+        return mongooseClient;
     }
 
     /**
@@ -163,18 +179,18 @@ export class App {
      *
      * @private
      * @static
-     * @param {PassportStatic} passport The static passport to be configured.
+     * @param {PassportStatic} ppt The static passport to be configured.
      * @param {string} jwsSecret The JWT secret to use for encryption.
      * @memberof App
      */
-    private static configurePassport(passport: PassportStatic, jwtSecret: string): void {
+    private static configurePassport(ppt: PassportStatic, jwtSecret: string): void {
         const options: StrategyOptions = {
             secretOrKey: jwtSecret,
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
         };
 
-        const strategy: Strategy = new Strategy(options, function (payload: any, done: VerifiedCallback) {
-            User.findOne({ id: payload.id }, function (err: any, user: IUser | null) {
+        const strategy: Strategy = new Strategy(options, (payload: any, done: VerifiedCallback) => {
+            User.findOne({ id: payload.id }, (err: any, user: IUser | null) => {
                 if (err) {
                     done(err, null);
                     return;
@@ -188,12 +204,13 @@ export class App {
             });
         });
 
-        passport.use(strategy);
+        ppt.use(strategy);
     }
 
     /**
      * An empty HTTP request handler that simply calls the next handler.
-     * It is useful within conditionals where another handler is provided in a certain scenario, this one can be provided in the opposing scenario.
+     * It is useful within conditionals where another handler is provided in a certain scenario,
+     * this one can be provided in the opposing scenario.
      *
      * @private
      * @param {Request} req The HTTP request.

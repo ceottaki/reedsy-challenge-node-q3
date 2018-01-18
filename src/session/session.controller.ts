@@ -1,10 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
-import { HttpVerbs } from '../core/http-verbs.enum';
 import { BaseController } from '../core/base.controller';
+import { HttpVerbs } from '../core/http-verbs.enum';
 import { IStandardResponse } from '../core/standard-response';
-import { LogOnInfo } from './logOnInfo.model';
 import { IJwtAuthenticationService } from './jwt-authentication.service.d';
+import { LogOnInfo } from './logOnInfo.model';
 import { ISession } from './session.model';
 import { IUser } from './user.model';
 
@@ -49,7 +49,7 @@ export class SessionController extends BaseController {
     /**
      * Creates a new entry in the sessions collection, authenticating a user.
      *
-     * @param {Request} req The HTTP request that should contain the following properties in its body: emailAddress and password.
+     * @param {Request} req The HTTP request that should contain the in its body an emailAddress and password.
      * @param {Response} res The HTTP response.
      * @param {NextFunction} next The next function in the pipeline.
      * @memberof SessionController
@@ -61,12 +61,14 @@ export class SessionController extends BaseController {
             return;
         }
 
-        this.authenticationService.logOn(logOnInfo).subscribe(token => {
+        this.authenticationService.logOn(logOnInfo).subscribe((token) => {
             const result: IStandardResponse = {
                 success: token !== null,
-                message: token !== null ? 'You have been successfully authenticated.' : 'Authentication failed. E-mail address or password incorrect.',
+                message: token !== null ?
+                    'You have been successfully authenticated.' :
+                    'Authentication failed. E-mail address or password incorrect.',
                 data: {
-                    token: token
+                    token
                 }
             };
 
@@ -83,7 +85,7 @@ export class SessionController extends BaseController {
      * @memberof SessionController
      */
     public getSession(req: Request, res: Response, next: NextFunction): void {
-        const user: IUser = <IUser>req.user;
+        const user: IUser = req.user as IUser;
         const result: ISession = {
             email: user.email,
             fullName: user.fullName

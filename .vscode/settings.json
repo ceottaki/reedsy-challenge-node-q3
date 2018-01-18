@@ -39,5 +39,7 @@
             "htm",
             "html"
         ]
-    }
+    },
+    "tslint.enable": true,
+    "tslint.ignoreDefinitionFiles": false
 }

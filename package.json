@@ -9,6 +9,7 @@
         "start": "npm run build:watch",
         "build": "tsc",
         "build:watch": "nodemon --exec ./node_modules/.bin/ts-node -- ./src/main.ts",
+        "lint": "tslint ./src/**/*.ts -t verbose",
         "test": "jasmine-ts --config=./jasmine.json",
         "test:watch": "nodemon --exec ./node_modules/.bin/jasmine-ts -- --config=./jasmine.json"
     },
@@ -35,6 +36,7 @@
         "mongodb-download": "2.2.3",
         "nodemon": "1.14.10",
         "ts-node": "4.1.0",
+        "tslint": "5.9.1",
         "typescript": "2.6.2"
     },
     "dependencies": {

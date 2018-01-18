@@ -1,5 +1,5 @@
+import { IController } from '../core/controller';
 import { IRoute } from '../core/route';
-import { IController } from "../core/controller";
 
 /**
  * Represents the default basic implementation of a controller.
