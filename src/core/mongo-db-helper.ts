@@ -11,6 +11,11 @@ import { IUser, User } from '../session/user.model';
  * @class MongoDbHelper
  */
 export class MongoDbHelper {
+    public static readonly validPassword: string = 'P@ssw0rd';
+    public static readonly invalidPassword: string = 'bladiblah';
+    public static readonly confirmedValidUser: string = 'someone@somewhere.com';
+    public static readonly unconfirmedValidUser: string = 'someone-else@somewhere.com';
+
     private static mockgoose: Mockgoose;
 
     /**
@@ -81,23 +86,18 @@ export class MongoDbHelper {
      * @memberof MongoDbHelper
      */
     public static createMockData(): Observable<void> {
-        const validPassword: string = 'P@ssw0rd';
-        const invalidPassword: string = 'bladiblah';
-        const confirmedValidUser: string = 'someone@somewhere.com';
-        const unconfirmedValidUser: string = 'someone-else@somewhere.com';
-
         const result: Observable<void> = Observable.create((observer: Observer<void>) => {
             if (this.mockgoose.helper.isMocked()) {
                 User.create(
                     [{
-                        email: confirmedValidUser,
-                        password: validPassword,
+                        email: MongoDbHelper.confirmedValidUser,
+                        password: MongoDbHelper.validPassword,
                         fullName: 'Confirmed User',
                         createdAt: new Date(2018, 0, 1)
                     },
                     {
-                        email: unconfirmedValidUser,
-                        password: validPassword,
+                        email: MongoDbHelper.unconfirmedValidUser,
+                        password: MongoDbHelper.validPassword,
                         fullName: 'Unconfirmed User',
                         createdAt: new Date(2018, 0, 1)
                     }],
@@ -107,7 +107,7 @@ export class MongoDbHelper {
                             throw err;
                         }
 
-                        const validUser = users.find((u) => u.email === confirmedValidUser);
+                        const validUser = users.find((u) => u.email === MongoDbHelper.confirmedValidUser);
                         if (validUser) {
                             validUser.isEmailConfirmed = true;
                             validUser.save().then(() => {

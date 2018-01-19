@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Observable } from 'rx';
 
@@ -44,7 +45,11 @@ export class JwtAuthenticationService implements IJwtAuthenticationService {
 
                 return user.comparePassword(logOnInfo.password).map((isMatch) => {
                     if (isMatch && user.isEmailConfirmed) {
-                        const token: string = jwt.sign(user.toObject(), this.jwtSecret);
+                        const jti = crypto.randomBytes(32).toString('hex');
+                        const token: string = jwt.sign(user.toObject(), this.jwtSecret, {
+                            expiresIn: '30m',
+                            jwtid: jti
+                        });
                         return token;
                     }
 

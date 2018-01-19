@@ -166,7 +166,7 @@ export class App {
         };
 
         const strategy: Strategy = new Strategy(options, (payload: any, done: VerifiedCallback) => {
-            User.findOne({ id: payload.id }, (err: any, user: IUser | null) => {
+            User.findById(payload.id, (err: any, user: IUser | null) => {
                 if (err) {
                     done(err, null);
                     return;
