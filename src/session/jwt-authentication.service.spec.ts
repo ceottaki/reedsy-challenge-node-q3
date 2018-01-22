@@ -1,3 +1,4 @@
+import * as jwt from 'jsonwebtoken';
 import { Mockgoose } from 'mockgoose';
 import * as mongoose from 'mongoose';
 
@@ -100,5 +101,33 @@ describe('JWT Authentication Service', () => {
             expect(token).toBeFalsy();
             done();
         });
+    });
+
+    it('should successfully log out a logged in user', (done) => {
+        const service = new JwtAuthenticationService('jwtSecret');
+        service.logOn(
+            new LogOnInfo(MongoDbHelper.confirmedValidUser, MongoDbHelper.validPassword)).subscribe((token) => {
+                const payload: any = jwt.verify(token as string, 'jwtSecret');
+                User.findById(payload._id, (err: any, user: IUser | null) => {
+                    service.logOut(user as IUser, payload.jti).subscribe((succeeded: boolean) => {
+                        expect(succeeded).toBe(true);
+                        done();
+                    });
+                });
+            });
+    });
+
+    it('should add the current token to the user\'s blacklist when logged out', (done) => {
+        const service = new JwtAuthenticationService('jwtSecret');
+        service.logOn(
+            new LogOnInfo(MongoDbHelper.confirmedValidUser, MongoDbHelper.validPassword)).subscribe((token) => {
+                const payload: any = jwt.verify(token as string, 'jwtSecret');
+                User.findById(payload._id, (err: any, user: IUser | null) => {
+                    service.logOut(user as IUser, payload.jti).subscribe((succeeded: boolean) => {
+                        expect((user as IUser).blacklistedTokens.indexOf(payload.jti)).toBeGreaterThanOrEqual(0);
+                        done();
+                    });
+                });
+            });
     });
 });
