@@ -180,14 +180,14 @@ export class App {
         };
 
         const strategy: Strategy = new Strategy(options, (payload: any, done: VerifiedCallback) => {
-            User.findById(payload.id, (err: any, user: IUser | null) => {
+            User.findById(payload._id, (err: any, user: IUser | null) => {
                 if (err) {
                     done(err, null);
                     return;
                 }
 
-                if (user) {
-                    done(null, user);
+                if (user && (user.blacklistedTokens.indexOf(payload.jti) < 0)) {
+                    done(null, user, payload.jti);
                 } else {
                     done(null, null);
                 }

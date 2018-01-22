@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
-import { Observable } from 'rx';
+import { Observable, Observer } from 'rx';
 
 import { IJwtAuthenticationService } from './jwt-authentication.service.d';
 import { LogOnInfo } from './logOnInfo.model';
@@ -10,8 +10,8 @@ import { IUser, User } from './user.model';
  * Represents an authentication service that allows users to log on and log off from the application.
  *
  * @export
- * @class AuthenticationService
- * @implements {IAuthenticationService}
+ * @class JwtAuthenticationService
+ * @implements {IJwtAuthenticationService}
  */
 export class JwtAuthenticationService implements IJwtAuthenticationService {
     private readonly jwtSecret: string;
@@ -30,7 +30,7 @@ export class JwtAuthenticationService implements IJwtAuthenticationService {
      *
      * @param {LogOnInfo} logOnInfo The log on information for a user.
      * @returns {Observable<string | null>} An observable with the token if successfully authenticated; null otherwise.
-     * @memberof AuthenticationService
+     * @memberof JwtAuthenticationService
      */
     public logOn(logOnInfo: LogOnInfo): Observable<string | null> {
         let result: Observable<string | null>;
@@ -56,6 +56,29 @@ export class JwtAuthenticationService implements IJwtAuthenticationService {
                     return null;
                 });
             });
+
+        return result;
+    }
+
+    /**
+     * Logs out a user by adding the given token id to the user's blacklist.
+     *
+     * @param {IUser} user The user to log out.
+     * @param {string} jti The JSON token id to blacklist.
+     * @returns {Observable<boolean>} An observable indicating whether the user was logged out successfully.
+     * @memberof JwtAuthenticationService
+     */
+    public logOut(user: IUser, jti: string): Observable<boolean> {
+        const result = Observable.create((observer: Observer<boolean>) => {
+            user.blacklistedTokens.push(jti);
+            user.save().then((savedUser: IUser) => {
+                observer.onNext(true);
+                observer.onCompleted();
+            }, (err: any) => {
+                observer.onNext(false);
+                observer.onCompleted();
+            });
+        });
 
         return result;
     }

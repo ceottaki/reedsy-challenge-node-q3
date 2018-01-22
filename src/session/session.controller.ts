@@ -108,6 +108,22 @@ export class SessionController extends BaseController {
      * @memberof SessionController
      */
     public deleteSession(req: Request, res: Response, next: NextFunction): void {
-        // TODO: Add code to delete a session, aka blacklist the JWT token.
+        const user: IUser = req.user as IUser;
+        this.authenticationService.logOut(user, req.authInfo).subscribe((success: boolean) => {
+            const response: IStandardResponse = {
+                success,
+                message: success ? 'You have been successfully logged out.' : 'You have not been logged out.'
+            };
+
+            res.json(response);
+        }, (err: any) => {
+            const response: IStandardResponse = {
+                success: false,
+                message: 'There was a problem logging you out.',
+                data: err
+            };
+
+            res.json(response);
+        });
     }
 }

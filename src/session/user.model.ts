@@ -53,6 +53,14 @@ export interface IUser extends Document {
     emailConfirmationToken?: string;
 
     /**
+     * Gets or sets an array of blacklisted tokens for this user.
+     *
+     * @type {string[]}
+     * @memberof IUser
+     */
+    blacklistedTokens: string[];
+
+    /**
      * Gets or sets the date in which this user was created.
      *
      * @type {Date}
@@ -132,6 +140,10 @@ export class UserSchema extends Schema {
                 type: String,
                 required: false
             },
+            blacklistedTokens: {
+                type: [String],
+                required: false
+            },
             createdAt: {
                 type: Date,
                 required: true
@@ -157,6 +169,7 @@ export class UserSchema extends Schema {
         const user: IUser = this as any;
         if (user.isNew) {
             user.createdAt = new Date();
+            user.blacklistedTokens = new Array<string>();
         }
 
         user.modifiedAt = new Date();

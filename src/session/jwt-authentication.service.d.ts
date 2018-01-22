@@ -1,12 +1,13 @@
 import { Observable } from 'rx';
 
 import { LogOnInfo } from './logOnInfo.model';
+import { IUser } from './user.model';
 
 /**
  * Defines properties and methods for an implementation of an authentication service.
  *
  * @export
- * @interface IAuthenticationService
+ * @interface IJwtAuthenticationService
  */
 export interface IJwtAuthenticationService {
     /**
@@ -14,7 +15,17 @@ export interface IJwtAuthenticationService {
      *
      * @param {LogOnInfo} logOnInfo The log on information for a user.
      * @returns {Observable<string | null>} An observable with the token if successfully authenticated; null otherwise.
-     * @memberof IAuthenticationService
+     * @memberof IJwtAuthenticationService
      */
     logOn(logOnInfo: LogOnInfo): Observable<string | null>;
+
+    /**
+     * When implemented it should log out a user by adding the given token id to the user's blacklist.
+     *
+     * @param {IUser} user The user to log out.
+     * @param {string} jti The JSON token id to blacklist.
+     * @returns {Observable<boolean>} An observable indicating whether the user was logged out successfully.
+     * @memberof IJwtAuthenticationService
+     */
+    logOut(user: IUser, jti: string): Observable<boolean>;
 }
