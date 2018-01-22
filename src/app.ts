@@ -32,9 +32,10 @@ export class App {
      * @param {number} port The port the application will listen for requests on.
      * @param {string} jwtSecret The secret to be used to encrypt and decrypt JWT tokens.
      * @param {string} mongoDbUri The URI to be used when connecting to MongoDB.
+     * @param {boolean} [mockData=false] If set to true mock data will be used instead of a real connection to MongoDB.
      * @memberof App
      */
-    constructor(port: number, jwtSecret: string, mongoDbUri: string) {
+    constructor(port: number, jwtSecret: string, mongoDbUri: string, mockData: boolean = false) {
         this.express = express();
         this.port = port;
 
@@ -65,7 +66,20 @@ export class App {
 
         // Sets up the MongoDB connection.
         console.log('Setting up the MongoDB connection...');
-        MongoDbHelper.openDatabaseConnection(mongoose, mongoDbUri);
+        if (mockData) {
+            MongoDbHelper.openMockDatabaseConnection(
+                mongoose,
+                mongoDbUri,
+                process.env.HTTP_PROXY !== undefined
+                    ? process.env.HTTP_PROXY as string
+                    : null).subscribeOnCompleted(() => {
+                        MongoDbHelper.resetMockData().subscribeOnCompleted(() => {
+                            MongoDbHelper.createMockData().subscribe();
+                        });
+                    });
+        } else {
+            MongoDbHelper.openDatabaseConnection(mongoose, mongoDbUri).subscribe();
+        }
 
         // Sets up what happens when the application ends.
         process.on('SIGINT', () => {

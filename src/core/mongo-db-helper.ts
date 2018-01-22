@@ -1,4 +1,5 @@
 import { Mockgoose } from 'mockgoose';
+import { MongoError } from 'mongodb';
 import { Connection, Mongoose } from 'mongoose';
 import { Observable, Observer } from 'rx';
 
@@ -31,6 +32,9 @@ export class MongoDbHelper {
         const result = Observable.create((observer: Observer<void>) => {
             mongooseClient.connect(mongoDbUri, { useMongoClient: true }).then(() => {
                 observer.onCompleted();
+            }, (err: MongoError) => {
+                observer.onError(err);
+                throw err;
             });
 
             const mongoDbConnection: Connection = mongooseClient.connection;
