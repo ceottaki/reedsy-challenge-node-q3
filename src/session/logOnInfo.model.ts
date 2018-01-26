@@ -1,5 +1,8 @@
-import { EmailValidator } from '../core/email-validator.service';
 import { ISelfValidating } from '../core/self-validating';
+
+// isemail does not provide types.
+// tslint:disable-next-line:no-var-requires
+const isEmail = require('isemail');
 
 /**
  * Represents information that allows a user to log on.
@@ -11,7 +14,6 @@ import { ISelfValidating } from '../core/self-validating';
 export class LogOnInfo implements ISelfValidating {
     public emailAddress: string;
     public password: string;
-    private emailValidator: EmailValidator;
 
     /**
      * Creates an instance of LogOnInfo.
@@ -22,7 +24,6 @@ export class LogOnInfo implements ISelfValidating {
     constructor(emailAddress: string, password: string) {
         this.emailAddress = emailAddress;
         this.password = password;
-        this.emailValidator = new EmailValidator();
     }
 
     /**
@@ -34,6 +35,6 @@ export class LogOnInfo implements ISelfValidating {
     public checkValidity(): boolean {
         return (this.password !== undefined
             && this.password !== null
-            && this.emailValidator.checkEmailValidity(this.emailAddress));
+            && isEmail.validate(this.emailAddress));
     }
 }
