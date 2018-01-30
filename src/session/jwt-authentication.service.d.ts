@@ -1,7 +1,7 @@
 import { Observable } from 'rx';
 
+import { IUser } from '../core/user.model';
 import { LogOnInfo } from './logOnInfo.model';
-import { IUser } from './user.model';
 
 /**
  * Defines properties and methods for an implementation of an authentication service.

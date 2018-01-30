@@ -3,7 +3,7 @@ import { MongoError } from 'mongodb';
 import { Connection, Mongoose } from 'mongoose';
 import { Observable, Observer } from 'rx';
 
-import { IUser, User } from '../session/user.model';
+import { IUser, User } from './user.model';
 
 /**
  * Represents a static helper for MongoDB.

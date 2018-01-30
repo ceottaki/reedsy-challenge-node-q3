@@ -2,9 +2,9 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Observable, Observer } from 'rx';
 
+import { IUser, User } from '../core/user.model';
 import { IJwtAuthenticationService } from './jwt-authentication.service.d';
 import { LogOnInfo } from './logOnInfo.model';
-import { IUser, User } from './user.model';
 
 /**
  * Represents an authentication service that allows users to log on and log off from the application.

@@ -21,7 +21,7 @@ export interface IUser extends Document {
     email: string;
 
     /**
-     * Gets or sets this user's password. It should always be encrypted.
+     * Gets or sets this user's password.
      *
      * @type {string}
      * @memberof IUser
@@ -35,6 +35,38 @@ export interface IUser extends Document {
      * @memberof IUser
      */
     fullName: string;
+
+    /**
+     * Gets or sets this user's nickname.
+     *
+     * @type {string}
+     * @memberof IUser
+     */
+    nickname?: string;
+
+    /**
+     * Gets or sets this user's date of birth.
+     *
+     * @type {Date}
+     * @memberof IUser
+     */
+    birthday: Date;
+
+    /**
+     * Gets or sets a text about this user.
+     *
+     * @type {string}
+     * @memberof IUser
+     */
+    aboutMe?: string;
+
+    /**
+     * Gets or sets the time zone this user operates from.
+     *
+     * @type {string}
+     * @memberof IUser
+     */
+    timeZone: string;
 
     /**
      * Gets or sets a value indicating whether this user has had their e-mail address confirmed.

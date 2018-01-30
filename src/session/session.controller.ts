@@ -3,10 +3,10 @@ import { NextFunction, Request, Response } from 'express';
 import { BaseController } from '../core/base.controller';
 import { HttpVerbs } from '../core/http-verbs.enum';
 import { IStandardResponse } from '../core/standard-response';
+import { IUser } from '../core/user.model';
 import { IJwtAuthenticationService } from './jwt-authentication.service.d';
 import { LogOnInfo } from './logOnInfo.model';
 import { ISession } from './session.model';
-import { IUser } from './user.model';
 
 /**
  * Represents a session controller.
@@ -49,7 +49,7 @@ export class SessionController extends BaseController {
     /**
      * Creates a new entry in the sessions collection, authenticating a user.
      *
-     * @param {Request} req The HTTP request that should contain the in its body an emailAddress and password.
+     * @param {Request} req The HTTP request that should contain in its body an emailAddress and password.
      * @param {Response} res The HTTP response.
      * @param {NextFunction} next The next function in the pipeline.
      * @memberof SessionController

@@ -11,7 +11,7 @@ import { ExtractJwt, Strategy, StrategyOptions, VerifiedCallback } from 'passpor
 import { IController } from './core/controller';
 import { HttpVerbs } from './core/http-verbs.enum';
 import { MongoDbHelper } from './core/mongo-db-helper';
-import { IUser, User } from './session/user.model';
+import { IUser, User } from './core/user.model';
 
 // This is a requirement of Mongoose to set which promise framework it will use.
 (mongoose as any).Promise = global.Promise;

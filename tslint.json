@@ -36,6 +36,13 @@
                 ]
             }
         ],
+        "no-empty": {
+            "severity": "warning",
+            "options": ["allow-empty-catch"]
+        },
+        "no-trailing-whitespace": {
+            "severity": "warning"
+        },
         "object-literal-sort-keys": false,
         "radix": false,
         "trailing-comma": false

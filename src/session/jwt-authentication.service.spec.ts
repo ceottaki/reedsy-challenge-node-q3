@@ -3,9 +3,9 @@ import { Mockgoose } from 'mockgoose';
 import * as mongoose from 'mongoose';
 
 import { MongoDbHelper } from '../core/mongo-db-helper';
+import { IUser, User } from '../core/user.model';
 import { JwtAuthenticationService } from './jwt-authentication.service';
 import { LogOnInfo } from './logOnInfo.model';
-import { IUser, User } from './user.model';
 
 // This is a requirement of Mongoose to set which promise framework it will use.
 (mongoose as any).Promise = global.Promise;
