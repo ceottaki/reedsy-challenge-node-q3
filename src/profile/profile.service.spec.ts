@@ -14,6 +14,7 @@ import { ProfileService } from './profile.service';
 let originalJasmineTimeout: number;
 
 const newValidUserEmail: string = 'thatperson@somewhere.com';
+const newSecondValidUserEmail: string = 'thatpersontwo@somewhere.com';
 
 describe('Profile Service', () => {
     beforeAll((done) => {
@@ -65,129 +66,239 @@ describe('Profile Service', () => {
     it('should create a new profile successfully when given valid information', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
-        service.createNewProfile({
-            email: newValidUserEmail,
-            password: MongoDbHelper.validPassword,
-            fullName: 'That Person',
-            birthday: new Date(2000, 0, 1)
-        } as IUser).subscribe((reason: ProfileFailureReasons) => {
-            reasons.push(reason);
-        }, (error: any) => {
+
+        try {
+            service.createNewProfile({
+                email: newValidUserEmail,
+                password: MongoDbHelper.validPassword,
+                fullName: 'That Person',
+                birthday: new Date(2000, 0, 1)
+            } as IUser).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                User.findOne({ email: newValidUserEmail }).exec().then((newUser: IUser | null) => {
+                    expect(newUser).toBeTruthy();
+                    done();
+                });
+            });
+        } catch (error) {
             fail(error);
             done();
-        }, () => {
-            expect(reasons[0] === ProfileFailureReasons.NONE && reasons.length === 1).toBe(true);
+        }
+    });
+
+    it('should not have any failure reasons when creating a new profile with valid information', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            service.createNewProfile({
+                email: newSecondValidUserEmail,
+                password: MongoDbHelper.validPassword,
+                fullName: 'That Person',
+                birthday: new Date(2000, 0, 1)
+            } as IUser).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(reasons[0] === ProfileFailureReasons.NONE && reasons.length === 1).toBe(true);
+                done();
+            });
+        } catch (error) {
+            fail(error);
             done();
-        });
+        }
     });
 
     it('should fail with a reason of duplicate e-mail when trying to register a profile with an existing active and confirmed e-mail address', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
 
-        service.createNewProfile({
-            email: MongoDbHelper.confirmedValidUser,
-            password: MongoDbHelper.validPassword,
-            fullName: 'That Person',
-            birthday: new Date(2000, 0, 1)
-        } as IUser).subscribe((reason: ProfileFailureReasons) => {
-            reasons.push(reason);
-        }, (error: any) => {
+        try {
+            service.createNewProfile({
+                email: MongoDbHelper.confirmedValidUser,
+                password: MongoDbHelper.validPassword,
+                fullName: 'That Person',
+                birthday: new Date(2000, 0, 1)
+            } as IUser).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(reasons[0] === ProfileFailureReasons.DUPLICATE_EMAIL && reasons.length === 1).toBe(true);
+                done();
+            });
+        } catch (error) {
             fail(error);
             done();
-        }, () => {
-            expect(reasons[0] === ProfileFailureReasons.DUPLICATE_EMAIL && reasons.length === 1).toBe(true);
-            done();
-        });
+        }
     });
 
     it('should fail with two reasons for duplicate and unconfirmed e-mail when trying to register a profile with an existing unconfirmed e-mail address', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
 
-        service.createNewProfile({
-            email: MongoDbHelper.unconfirmedValidUser,
-            password: MongoDbHelper.validPassword,
-            fullName: 'That Person',
-            birthday: new Date(2000, 0, 1)
-        } as IUser).subscribe((reason: ProfileFailureReasons) => {
-            reasons.push(reason);
-        }, (error: any) => {
+        try {
+            service.createNewProfile({
+                email: MongoDbHelper.unconfirmedValidUser,
+                password: MongoDbHelper.validPassword,
+                fullName: 'That Person',
+                birthday: new Date(2000, 0, 1)
+            } as IUser).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(
+                    reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0
+                    && reasons.indexOf(ProfileFailureReasons.UNCONFIRMED_EMAIL) >= 0
+                    && reasons.length === 2).toBe(true);
+                done();
+            });
+        } catch (error) {
             fail(error);
             done();
-        }, () => {
-            expect(
-                reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0
-                && reasons.indexOf(ProfileFailureReasons.UNCONFIRMED_EMAIL) >= 0
-                && reasons.length === 2).toBe(true);
-            done();
-        });
+        }
     });
 
     it('should fail with two reasons for duplicate e-mail and deactivated profile when trying to register a profile with an existing deactivated profile', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
 
-        service.createNewProfile({
-            email: MongoDbHelper.inactiveValidUser,
-            password: MongoDbHelper.validPassword,
-            fullName: 'That Person',
-            birthday: new Date(2000, 0, 1)
-        } as IUser).subscribe((reason: ProfileFailureReasons) => {
-            reasons.push(reason);
-        }, (error: any) => {
+        try {
+            service.createNewProfile({
+                email: MongoDbHelper.inactiveValidUser,
+                password: MongoDbHelper.validPassword,
+                fullName: 'That Person',
+                birthday: new Date(2000, 0, 1)
+            } as IUser).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(
+                    reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0
+                    && reasons.indexOf(ProfileFailureReasons.INACTIVE_PROFILE) >= 0
+                    && reasons.length === 2).toBe(true);
+                done();
+            });
+        } catch (error) {
             fail(error);
             done();
-        }, () => {
-            expect(
-                reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0
-                && reasons.indexOf(ProfileFailureReasons.INACTIVE_PROFILE) >= 0
-                && reasons.length === 2).toBe(true);
-            done();
-        });
+        }
     });
 
     it('should fail with three reasons for duplicate and unconfirmed e-mail and deactivated profile when trying to register a profile wiht an existing unconfirmed deactivated profile', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
 
-        service.createNewProfile({
-            email: MongoDbHelper.inactiveUnconfirmedValidUser,
-            password: MongoDbHelper.validPassword,
-            fullName: 'That Person',
-            birthday: new Date(2000, 0, 1)
-        } as IUser).subscribe((reason: ProfileFailureReasons) => {
-            reasons.push(reason);
-        }, (error: any) => {
+        try {
+            service.createNewProfile({
+                email: MongoDbHelper.inactiveUnconfirmedValidUser,
+                password: MongoDbHelper.validPassword,
+                fullName: 'That Person',
+                birthday: new Date(2000, 0, 1)
+            } as IUser).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(
+                    reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0
+                    && reasons.indexOf(ProfileFailureReasons.INACTIVE_PROFILE) >= 0
+                    && reasons.indexOf(ProfileFailureReasons.UNCONFIRMED_EMAIL) >= 0
+                    && reasons.length === 3).toBe(true);
+                done();
+            });
+        } catch (error) {
             fail(error);
             done();
-        }, () => {
-            expect(
-                reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0
-                && reasons.indexOf(ProfileFailureReasons.INACTIVE_PROFILE) >= 0
-                && reasons.indexOf(ProfileFailureReasons.UNCONFIRMED_EMAIL) >= 0
-                && reasons.length === 3).toBe(true);
-            done();
-        });
+        }
     });
 
     it('should fail with a reason of missing required field when trying to register with incomplete information', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
 
-        service.createNewProfile({
-            email: MongoDbHelper.inactiveUnconfirmedValidUser,
-            password: MongoDbHelper.validPassword,
-            fullName: 'That Person'
-        } as IUser).subscribe((reason: ProfileFailureReasons) => {
-            reasons.push(reason);
-        }, (error: any) => {
+        try {
+            service.createNewProfile({
+                email: MongoDbHelper.inactiveUnconfirmedValidUser,
+                password: MongoDbHelper.validPassword,
+                fullName: 'That Person'
+            } as IUser).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(
+                    reasons.indexOf(ProfileFailureReasons.MISSING_REQUIRED) >= 0 && reasons.length === 1).toBe(true);
+                done();
+            });
+        } catch (error) {
             fail(error);
             done();
-        }, () => {
-            expect(
-                reasons.indexOf(ProfileFailureReasons.MISSING_REQUIRED) >= 0 && reasons.length === 1).toBe(true);
-            done();
-        });
+        }
     });
+
+    it('should remove sensitive information from profiles when cleaning them for client-side presentation', (done) => {
+        const service = new ProfileService();
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                try {
+                    const result: any = service.cleanProfileForClient(user as IUser);
+                    expect(result.password).toBeUndefined();
+                    expect(result.blacklistedTokens).toBeUndefined();
+                    expect(result.emailConfirmationToken).toBeUndefined();
+                    expect(result.__v).toBeUndefined();
+                    done();
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
+    });
+
+    it('should not have any failure reasons when updating an existing profile with valid information', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                user.aboutMe = 'Test about me.';
+                try {
+                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        expect(reasons[0] === ProfileFailureReasons.NONE && reasons.length === 1).toBe(true);
+                        done();
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
+    });
+
+    // TODO: Write the other unit tests to cover all use cases of the profile service.
 });
