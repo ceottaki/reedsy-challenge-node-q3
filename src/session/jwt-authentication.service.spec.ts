@@ -13,6 +13,7 @@ import { LogOnInfo } from './logOnInfo.model';
 let originalJasmineTimeout: number;
 
 const invalidUser: string = 'bladibla@somewhere.com';
+const invalidPassword: string = 'bladiblah';
 
 describe('JWT Authentication Service', () => {
     beforeAll((done) => {
@@ -24,7 +25,7 @@ describe('JWT Authentication Service', () => {
         // Sets up a mocked instance of MongoDB to be used through Mongoose.
         MongoDbHelper.openMockDatabaseConnection(
             mongoose,
-            'mongodb://localhost/mock',
+            'mongodb://localhost/boilerplate',
             process.env.HTTP_PROXY !== undefined ? process.env.HTTP_PROXY as string : null)
             .subscribeOnCompleted(() => {
                 done();
@@ -71,7 +72,7 @@ describe('JWT Authentication Service', () => {
     it('should not log on a valid user with the incorrect password', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(MongoDbHelper.confirmedValidUser, MongoDbHelper.invalidPassword)).subscribe((token) => {
+            new LogOnInfo(MongoDbHelper.confirmedValidUser, invalidPassword)).subscribe((token) => {
                 expect(token).toBeFalsy();
                 done();
             });
@@ -89,7 +90,7 @@ describe('JWT Authentication Service', () => {
     it('should not log on a valid unconfirmed user with the incorrect password', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(MongoDbHelper.unconfirmedValidUser, MongoDbHelper.invalidPassword)).subscribe((token) => {
+            new LogOnInfo(MongoDbHelper.unconfirmedValidUser, invalidPassword)).subscribe((token) => {
                 expect(token).toBeFalsy();
                 done();
             });

@@ -109,6 +109,14 @@ export interface IUser extends Document {
     modifiedAt?: Date;
 
     /**
+     * Gets or sets a value indicating whether this user is deactived.
+     *
+     * @type {boolean}
+     * @memberof IUser
+     */
+    isDeactivated: boolean;
+
+    /**
      * When implemented it should compare this user's password (encrypted) with the given plaintext password.
      *
      * @param {string} password
@@ -163,6 +171,23 @@ export class UserSchema extends Schema {
                 type: String,
                 required: true
             },
+            nickname: {
+                type: String,
+                required: false
+            },
+            birthday: {
+                type: Date,
+                required: true
+            },
+            aboutMe: {
+                type: String,
+                required: false
+            },
+            timeZone: {
+                type: String,
+                required: true,
+                default: 'Europe/London'
+            },
             isEmailConfirmed: {
                 type: Boolean,
                 required: true,
@@ -178,11 +203,16 @@ export class UserSchema extends Schema {
             },
             createdAt: {
                 type: Date,
-                required: true
+                required: false
             },
             modifiedAt: {
                 type: Date,
                 required: false
+            },
+            isDeactivated: {
+                type: Boolean,
+                required: true,
+                default: false
             }
         };
 

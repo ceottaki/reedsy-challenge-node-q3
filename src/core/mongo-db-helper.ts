@@ -13,9 +13,10 @@ import { IUser, User } from './user.model';
  */
 export class MongoDbHelper {
     public static readonly validPassword: string = 'P@ssw0rd';
-    public static readonly invalidPassword: string = 'bladiblah';
     public static readonly confirmedValidUser: string = 'someone@somewhere.com';
     public static readonly unconfirmedValidUser: string = 'someone-else@somewhere.com';
+    public static readonly inactiveValidUser: string = 'someone-not-anymore@somewhere.com';
+    public static readonly inactiveUnconfirmedValidUser: string = 'someone-else-not-anymore@somewhere.com';
 
     private static mockgoose: Mockgoose;
 
@@ -97,13 +98,25 @@ export class MongoDbHelper {
                         email: MongoDbHelper.confirmedValidUser,
                         password: MongoDbHelper.validPassword,
                         fullName: 'Confirmed User',
-                        createdAt: new Date(2018, 0, 1)
+                        birthday: new Date(2000, 0, 1)
                     },
                     {
                         email: MongoDbHelper.unconfirmedValidUser,
                         password: MongoDbHelper.validPassword,
                         fullName: 'Unconfirmed User',
-                        createdAt: new Date(2018, 0, 1)
+                        birthday: new Date(2000, 0, 2)
+                    },
+                    {
+                        email: MongoDbHelper.inactiveValidUser,
+                        password: MongoDbHelper.validPassword,
+                        fullName: 'Inactive User',
+                        birthday: new Date(2000, 0, 3)
+                    },
+                    {
+                        email: MongoDbHelper.inactiveUnconfirmedValidUser,
+                        password: MongoDbHelper.validPassword,
+                        fullName: 'Inactive Unconfirmed User',
+                        birthday: new Date(2000, 0, 3)
                     }],
                     (err: any, users: IUser[]) => {
                         if (err) {
@@ -111,13 +124,21 @@ export class MongoDbHelper {
                             throw err;
                         }
 
-                        const validUser = users.find((u) => u.email === MongoDbHelper.confirmedValidUser);
-                        if (validUser) {
-                            validUser.isEmailConfirmed = true;
-                            validUser.save().then(() => {
-                                observer.onCompleted();
+                        const validUser = users.find((u) => u.email === MongoDbHelper.confirmedValidUser) as IUser;
+                        validUser.isEmailConfirmed = true;
+                        validUser.save().then(() => {
+                            const inactiveUser = users.find((iu) => iu.email === MongoDbHelper.inactiveValidUser) as IUser;
+                            inactiveUser.isDeactivated = true;
+                            inactiveUser.isEmailConfirmed = true;
+                            inactiveUser.save().then(() => {
+                                const inactiveUnconfirmedUser = users.find((iuu) =>
+                                    iuu.email === MongoDbHelper.inactiveUnconfirmedValidUser) as IUser;
+                                inactiveUnconfirmedUser.isDeactivated = true;
+                                inactiveUnconfirmedUser.save().then(() => {
+                                    observer.onCompleted();
+                                });
                             });
-                        }
+                        });
                     });
             }
         });

@@ -30,7 +30,10 @@
             ],
             "sourceMaps": true,
             "cwd": "${workspaceRoot}",
-            "protocol": "inspector"
+            "protocol": "inspector",
+            "env": {
+                "MOCK_MONGODB_DATA": "true"
+            }
         }
     ],
 }
