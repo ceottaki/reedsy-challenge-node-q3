@@ -57,7 +57,12 @@ export class SessionController extends BaseController {
     public postSession(req: Request, res: Response, next: NextFunction): void {
         const logOnInfo: LogOnInfo = new LogOnInfo(req.body.emailAddress, req.body.password);
         if (!logOnInfo.checkValidity()) {
-            next(new Error('Attempting to create a session with an incorrect request.'));
+            res.statusCode = 400;
+            const result: IStandardResponse = {
+                success: false,
+                message: 'Authentication failed. E-mail address or password incorrect.'
+            };
+            res.json(result);
             return;
         }
 
@@ -72,6 +77,7 @@ export class SessionController extends BaseController {
                 }
             };
 
+            res.statusCode = result.success ? 201 : 401;
             res.json(result);
         });
     }
@@ -96,6 +102,7 @@ export class SessionController extends BaseController {
             data: result
         };
 
+        res.statusCode = 200;
         res.json(response);
     }
 
@@ -110,6 +117,7 @@ export class SessionController extends BaseController {
     public deleteSession(req: Request, res: Response, next: NextFunction): void {
         const user: IUser = req.user as IUser;
         this.authenticationService.logOut(user, req.authInfo).subscribe((success: boolean) => {
+            res.statusCode = success ? 200 : 500;
             const response: IStandardResponse = {
                 success,
                 message: success ? 'You have been successfully logged out.' : 'You have not been logged out.'
@@ -117,6 +125,7 @@ export class SessionController extends BaseController {
 
             res.json(response);
         }, (err: any) => {
+            res.statusCode = 500;
             const response: IStandardResponse = {
                 success: false,
                 message: 'There was a problem logging you out.',

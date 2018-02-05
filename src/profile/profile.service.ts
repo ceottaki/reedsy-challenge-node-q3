@@ -75,4 +75,21 @@ export class ProfileService implements IProfileService {
     public deactivateProfile(user: IUser): Observable<ProfileFailureReasons> {
         throw new Error('Method not implemented.');
     }
+
+    /**
+     * Cleans a given profile for presentation to client-side, removing the encrypted password, the blacklisted tokens
+     * and the e-mail confirmation token.
+     *
+     * @param {IUser} user The user profile to be cleaned.
+     * @returns {object} The cleaned user profile.
+     * @memberof ProfileService
+     */
+    public cleanProfileForClient(user: IUser): any {
+        const result: any = user;
+        result.password = undefined;
+        result.blacklistedTokens = undefined;
+        result.emailConfirmationToken = undefined;
+        result.__v = undefined;
+        return user;
+    }
 }

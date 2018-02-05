@@ -10,7 +10,6 @@ import { ProfileFailureReasons } from './profile-failure-reasons.enum';
  * @interface IProfileService
  */
 export interface IProfileService {
-
     /**
      * When implemented it should create a new user profile with the given information.
      *
@@ -37,4 +36,14 @@ export interface IProfileService {
      * @memberof IProfileService
      */
     deactivateProfile(user: IUser): Observable<ProfileFailureReasons>;
+
+    /**
+     * When implemented it should clean a given profile for presentation to client-side,
+     * removing sensitive information such as encrypted passwords.
+     *
+     * @param {IUser} user The user profile to be cleaned.
+     * @returns {object} The cleaned user profile.
+     * @memberof IProfileService
+     */
+    cleanProfileForClient(user: IUser): any;
 }
