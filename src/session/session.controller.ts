@@ -56,15 +56,6 @@ export class SessionController extends BaseController {
      */
     public postSession(req: Request, res: Response, next: NextFunction): void {
         const logOnInfo: LogOnInfo = new LogOnInfo(req.body.emailAddress, req.body.password);
-        if (!logOnInfo.checkValidity()) {
-            res.statusCode = 400;
-            const result: IStandardResponse = {
-                success: false,
-                message: 'Authentication failed. E-mail address or password incorrect.'
-            };
-            res.json(result);
-            return;
-        }
 
         this.authenticationService.logOn(logOnInfo).subscribe((token) => {
             const result: IStandardResponse = {

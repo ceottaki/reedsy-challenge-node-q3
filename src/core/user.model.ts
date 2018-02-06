@@ -251,11 +251,13 @@ export class UserSchema extends Schema {
         const user: IUser = this as any;
         if (user.isModified('password') || user.isNew) {
             crypto.randomBytes(128, (err: Error, salt: Buffer) => {
+                /* istanbul ignore if */
                 if (err) {
                     return next(err);
                 }
 
                 crypto.pbkdf2(user.password, salt, 9973, 512, 'sha512', (pbkdf2Error: Error, hash: Buffer) => {
+                    /* istanbul ignore if */
                     if (pbkdf2Error) {
                         return next(pbkdf2Error);
                     }
@@ -290,6 +292,7 @@ export class UserSchema extends Schema {
         }
 
         crypto.randomBytes(32, (err: Error, salt: Buffer) => {
+            /* istanbul ignore if */
             if (err) {
                 return next(err);
             }
@@ -319,6 +322,7 @@ export class UserSchema extends Schema {
 
         const pbkdf2 = Observable.fromNodeCallback<Buffer>(crypto.pbkdf2);
         return pbkdf2(password, salt, iterations, hashBytes, 'sha512').map((verify) => {
+            /* istanbul ignore if */
             if (!verify) {
                 return false;
             }

@@ -33,18 +33,22 @@ export class MongoDbHelper {
         const result = Observable.create((observer: Observer<void>) => {
             mongooseClient.connect(mongoDbUri, { useMongoClient: true }).then(() => {
                 observer.onCompleted();
-            }, (err: MongoError) => {
-                observer.onError(err);
-                throw err;
-            });
+            },
+                /* istanbul ignore next */
+                (err: MongoError) => {
+                    observer.onError(err);
+                    throw err;
+                });
 
             const mongoDbConnection: Connection = mongooseClient.connection;
             mongoDbConnection.on('connected', () => {
                 console.log('Connected to MongoDB.');
             });
-            mongoDbConnection.on('error', (err: any) => {
-                console.log(`There was a problem connecting to MongoDB: ${err}`);
-            });
+            mongoDbConnection.on('error',
+                /* istanbul ignore next */
+                (err: any) => {
+                    console.log(`There was a problem connecting to MongoDB: ${err}`);
+                });
             mongoDbConnection.on('disconnected', () => {
                 console.log('Disconnected from MongoDB.');
             });
@@ -69,6 +73,8 @@ export class MongoDbHelper {
         httpProxy: string | null): Observable<void> {
         const result = Observable.create((observer: Observer<void>) => {
             MongoDbHelper.mockgoose = new Mockgoose(mongooseClient);
+
+            /* istanbul ignore next */
             if (httpProxy !== null) {
                 MongoDbHelper.mockgoose.helper.setProxy(httpProxy);
             }
@@ -92,6 +98,7 @@ export class MongoDbHelper {
      */
     public static createMockData(): Observable<void> {
         const result: Observable<void> = Observable.create((observer: Observer<void>) => {
+            /* istanbul ignore else */
             if (this.mockgoose.helper.isMocked()) {
                 User.create(
                     [{
@@ -119,6 +126,7 @@ export class MongoDbHelper {
                         birthday: new Date(2000, 0, 3)
                     }],
                     (err: any, users: IUser[]) => {
+                        /* istanbul ignore if */
                         if (err) {
                             console.log(`There was a problem creating mock users: ${err}`);
                             throw err;

@@ -35,6 +35,10 @@ export class JwtAuthenticationService implements IJwtAuthenticationService {
     public logOn(logOnInfo: LogOnInfo): Observable<string | null> {
         let result: Observable<string | null>;
 
+        if (!logOnInfo.checkValidity()) {
+            return Observable.of<string | null>(null);
+        }
+
         result = Observable.fromPromise(
             User.findOne({
                 email: logOnInfo.emailAddress
@@ -74,10 +78,12 @@ export class JwtAuthenticationService implements IJwtAuthenticationService {
             user.save().then((savedUser: IUser) => {
                 observer.onNext(true);
                 observer.onCompleted();
-            }, (err: any) => {
-                observer.onNext(false);
-                observer.onCompleted();
-            });
+            },
+                /* istanbul ignore next */
+                (err: any) => {
+                    observer.onNext(false);
+                    observer.onCompleted();
+                });
         });
 
         return result;

@@ -31,21 +31,23 @@ export class ProfileService implements IProfileService {
                     return User.findOne({
                         email: user.email
                     }).exec().then((existingUser: IUser | null) => {
-                        if (existingUser !== null) {
-                            if (existingUser.isDeactivated) {
-                                observer.onNext(ProfileFailureReasons.INACTIVE_PROFILE);
-                            }
+                        existingUser = existingUser as IUser;
+                        if (existingUser.isDeactivated) {
+                            observer.onNext(ProfileFailureReasons.INACTIVE_PROFILE);
+                        }
 
-                            if (!existingUser.isEmailConfirmed) {
-                                observer.onNext(ProfileFailureReasons.UNCONFIRMED_EMAIL);
-                            }
+                        if (!existingUser.isEmailConfirmed) {
+                            observer.onNext(ProfileFailureReasons.UNCONFIRMED_EMAIL);
                         }
                     });
-                } else if (err && err.name === 'ValidationError') {
-                    observer.onNext(ProfileFailureReasons.MISSING_REQUIRED);
-                } else {
-                    observer.onNext(ProfileFailureReasons.UNKNOWN);
-                }
+                } else
+                    /* istanbul ignore else */
+                    if (err && err.name === 'ValidationError') {
+                        observer.onNext(ProfileFailureReasons.MISSING_REQUIRED);
+                    } else {
+                        /* istanbul ignore next */
+                        observer.onNext(ProfileFailureReasons.UNKNOWN);
+                    }
             }).then(() => {
                 observer.onCompleted();
             });

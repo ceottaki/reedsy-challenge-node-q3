@@ -14,6 +14,7 @@ let originalJasmineTimeout: number;
 
 const invalidUser: string = 'bladibla@somewhere.com';
 const invalidPassword: string = 'bladiblah';
+const malformedEmailAddress: string = 'not-email-addr@...';
 
 describe('JWT Authentication Service', () => {
     beforeAll((done) => {
@@ -73,6 +74,24 @@ describe('JWT Authentication Service', () => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
             new LogOnInfo(MongoDbHelper.confirmedValidUser, invalidPassword)).subscribe((token) => {
+                expect(token).toBeFalsy();
+                done();
+            });
+    });
+
+    it('should not log on a user with malformed e-mail address', (done) => {
+        const service = new JwtAuthenticationService('jwtSecret');
+        service.logOn(
+            new LogOnInfo(malformedEmailAddress, MongoDbHelper.validPassword)).subscribe((token) => {
+                expect(token).toBeFalsy();
+                done();
+            });
+    });
+
+    it('should not log on a user with a blank password', (done) => {
+        const service = new JwtAuthenticationService('jwtSecret');
+        service.logOn(
+            new LogOnInfo(MongoDbHelper.confirmedValidUser, '')).subscribe((token) => {
                 expect(token).toBeFalsy();
                 done();
             });
