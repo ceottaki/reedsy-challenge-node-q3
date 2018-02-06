@@ -1,4 +1,5 @@
 // tslint:disable:max-line-length
+import * as crypto from 'crypto';
 import { Mockgoose } from 'mockgoose';
 import * as mongoose from 'mongoose';
 import { Observable } from 'rx';
@@ -196,7 +197,7 @@ describe('Profile Service', () => {
         }
     });
 
-    it('should fail with three reasons for duplicate and unconfirmed e-mail and deactivated profile when trying to register a profile wiht an existing unconfirmed deactivated profile', (done) => {
+    it('should fail with three reasons for duplicate and unconfirmed e-mail and deactivated profile when trying to register a profile with an existing unconfirmed deactivated profile', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
 
@@ -272,6 +273,51 @@ describe('Profile Service', () => {
         }
     });
 
+    it('should update a profile successfully when given valid information', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+
+                crypto.randomBytes(16, (err: Error, salt: Buffer) => {
+                    if (err) {
+                        fail(err);
+                    }
+
+                    const randomAboutMe = salt.toString('hex');
+                    user = user as IUser;
+                    user.aboutMe = randomAboutMe;
+                    try {
+                        service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                            reasons.push(reason);
+                        }, (error: any) => {
+                            fail(error);
+                            done();
+                        }, () => {
+                            try {
+                                User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((updatedUser: IUser | null) => {
+                                    expect(updatedUser).toBeTruthy();
+                                    expect((updatedUser as IUser).aboutMe).toBe(randomAboutMe);
+                                    done();
+                                });
+                            } catch (error) {
+                                fail(error);
+                                done();
+                            }
+                        });
+                    } catch (error) {
+                        fail(error);
+                        done();
+                    }
+                });
+
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
+    });
+
     it('should not have any failure reasons when updating an existing profile with valid information', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
@@ -300,5 +346,69 @@ describe('Profile Service', () => {
         }
     });
 
-    // TODO: Write the other unit tests to cover all use cases of the profile service.
+    it('should fail with a reason of duplicate e-mail when trying to update a profile to an existing active and confirmed e-mail address', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should fail with two reasons for duplicate and unconfirmed e-mail when trying to update a profile to an existing unconfirmed e-mail address', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should fail with two reasons for duplicate e-mail and deactivated profile when trying to update a profile to the e-mail address of an existing deactivated profile', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should fail with three reasons for duplicate and unconfirmed e-mail and deactivated profile when trying to update a profile to an existing unconfirmed deactivated profile', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should fail with a reason of missing required field when trying to update a profile with incomplete information', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should fail with a reason of non-existent profile when trying to update a non-existent profile', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should deactivate a profile successfully when given a currently active profile', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should fail to deactivate a profile when given a currently active profile', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should not have any failure reasons when deactivating a currently active profile', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should fail with a reason of deactivated profile when trying to deactivate a currently inactive profile', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
+
+    it('should fail with a reason of non-existent profile when trying to deactivate a non-existent profile', (done) => {
+        // TODO: Write test.
+        fail('Test not implemented.');
+        done();
+    });
 });
