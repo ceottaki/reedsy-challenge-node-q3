@@ -16,6 +16,7 @@ let originalJasmineTimeout: number;
 
 const newValidUserEmail: string = 'thatperson@somewhere.com';
 const newSecondValidUserEmail: string = 'thatpersontwo@somewhere.com';
+const invalidUser: string = 'bladibla@somewhere.com';
 
 describe('Profile Service', () => {
     beforeAll((done) => {
@@ -253,6 +254,7 @@ describe('Profile Service', () => {
 
     it('should remove sensitive information from profiles when cleaning them for client-side presentation', (done) => {
         const service = new ProfileService();
+
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 try {
@@ -276,9 +278,9 @@ describe('Profile Service', () => {
     it('should update a profile successfully when given valid information', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
-
                 crypto.randomBytes(16, (err: Error, salt: Buffer) => {
                     if (err) {
                         fail(err);
@@ -310,7 +312,6 @@ describe('Profile Service', () => {
                         done();
                     }
                 });
-
             });
         } catch (error) {
             fail(error);
@@ -321,6 +322,7 @@ describe('Profile Service', () => {
     it('should not have any failure reasons when updating an existing profile with valid information', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
@@ -347,68 +349,373 @@ describe('Profile Service', () => {
     });
 
     it('should fail with a reason of duplicate e-mail when trying to update a profile to an existing active and confirmed e-mail address', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            User.findOne({ email: MongoDbHelper.unconfirmedValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                user.email = MongoDbHelper.confirmedValidUser;
+                try {
+                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        expect(reasons[0] === ProfileFailureReasons.DUPLICATE_EMAIL && reasons.length === 1).toBe(true);
+                        done();
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 
     it('should fail with two reasons for duplicate and unconfirmed e-mail when trying to update a profile to an existing unconfirmed e-mail address', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                user.email = MongoDbHelper.unconfirmedValidUser;
+                try {
+                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        expect(reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0
+                            && reasons.indexOf(ProfileFailureReasons.UNCONFIRMED_EMAIL) >= 0
+                            && reasons.length === 2).toBe(true);
+                        done();
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 
     it('should fail with two reasons for duplicate e-mail and deactivated profile when trying to update a profile to the e-mail address of an existing deactivated profile', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                user.email = MongoDbHelper.inactiveValidUser;
+                try {
+                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        expect(reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0
+                            && reasons.indexOf(ProfileFailureReasons.INACTIVE_PROFILE) >= 0
+                            && reasons.length === 2).toBe(true);
+                        done();
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 
     it('should fail with three reasons for duplicate and unconfirmed e-mail and deactivated profile when trying to update a profile to an existing unconfirmed deactivated profile', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                user.email = MongoDbHelper.inactiveUnconfirmedValidUser;
+                try {
+                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        expect(reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0
+                            && reasons.indexOf(ProfileFailureReasons.INACTIVE_PROFILE) >= 0
+                            && reasons.indexOf(ProfileFailureReasons.UNCONFIRMED_EMAIL) >= 0
+                            && reasons.length === 3).toBe(true);
+                        done();
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 
     it('should fail with a reason of missing required field when trying to update a profile with incomplete information', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                const userAny = user as any;
+                userAny.birthday = undefined;
+                try {
+                    service.updateProfile(userAny).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        expect(reasons.indexOf(ProfileFailureReasons.MISSING_REQUIRED) >= 0
+                            && reasons.length === 1).toBe(true);
+                        done();
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 
     it('should fail with a reason of non-existent profile when trying to update a non-existent profile', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+        const nonExistentUser: any = {
+            email: invalidUser,
+            password: MongoDbHelper.validPassword,
+            fullName: 'Non-Existent User',
+            birthday: new Date(2000, 0, 1),
+            timeZone: 'Europe/London'
+        };
+
+        try {
+            service.updateProfile(nonExistentUser).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(reasons.indexOf(ProfileFailureReasons.NON_EXISTENT_PROFILE) >= 0
+                    && reasons.length === 1).toBe(true);
+                done();
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
+    });
+
+    it('should make an e-mail address unconfirmed when successfully updating the e-mail address of a profile', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                user.email = 'different@somewhere.com';
+                try {
+                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        try {
+                            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((updatedUser: IUser | null) => {
+                                expect(updatedUser).toBeTruthy();
+                                updatedUser = updatedUser as IUser;
+                                expect(updatedUser.isEmailConfirmed).toBe(false);
+                                expect(updatedUser.emailConfirmationToken).toBeTruthy();
+
+                                // Returns the user to its confirmed status for further tests.
+                                try {
+                                    updatedUser.isEmailConfirmed = true;
+                                    updatedUser.save().then(() => {
+                                        done();
+                                    });
+                                } catch {
+                                    done();
+                                }
+                            });
+                        } catch (error) {
+                            fail(error);
+                            done();
+                        }
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 
     it('should deactivate a profile successfully when given a currently active profile', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
-    });
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>()
 
-    it('should fail to deactivate a profile when given a currently active profile', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                try {
+                    service.deactivateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        try {
+                            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((updatedUser: IUser | null) => {
+                                expect(updatedUser).toBeTruthy();
+                                expect((updatedUser as IUser).isDeactivated).toBe(true);
+
+                                // Return the user to its initial state for further tests.
+                                try {
+                                    (updatedUser as IUser).isDeactivated = false;
+                                    (updatedUser as IUser).save().then(() => {
+                                        done();
+                                    });
+                                } catch {
+                                    done();
+                                }
+                            });
+                        } catch (error) {
+                            fail(error);
+                            done();
+                        }
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 
     it('should not have any failure reasons when deactivating a currently active profile', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                try {
+                    service.deactivateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        expect(reasons.indexOf(ProfileFailureReasons.NONE) >= 0 && reasons.length === 1).toBe(true);
+                        try {
+                            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((updatedUser: IUser | null) => {
+                                // Return the user to its initial state for further tests.
+                                try {
+                                    (updatedUser as IUser).isDeactivated = false;
+                                    (updatedUser as IUser).save().then(() => {
+                                        done();
+                                    });
+                                } catch {
+                                    done();
+                                }
+                            });
+                        } catch (error) {
+                            fail(error);
+                            done();
+                        }
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 
     it('should fail with a reason of deactivated profile when trying to deactivate a currently inactive profile', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            User.findOne({ email: MongoDbHelper.inactiveValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                try {
+                    service.deactivateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        expect(reasons.indexOf(ProfileFailureReasons.INACTIVE_PROFILE) >= 0 && reasons.length === 1).toBe(true);
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 
     it('should fail with a reason of non-existent profile when trying to deactivate a non-existent profile', (done) => {
-        // TODO: Write test.
-        fail('Test not implemented.');
-        done();
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+        const nonExistentUser: any = {
+            email: invalidUser,
+            password: MongoDbHelper.validPassword,
+            fullName: 'Non-Existent User',
+            birthday: new Date(2000, 0, 1),
+            timeZone: 'Europe/London',
+            isDeactivated: false
+        };
+
+        try {
+            service.deactivateProfile(nonExistentUser).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(reasons.indexOf(ProfileFailureReasons.NON_EXISTENT_PROFILE) >= 0 && reasons.length === 1).toBe(true);
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
     });
 });
