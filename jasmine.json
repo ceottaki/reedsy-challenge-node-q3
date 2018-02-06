@@ -4,5 +4,18 @@
         "**/*[sS]pec.ts"
     ],
     "stopSpecOnExpectationFailure": false,
-    "random": false
+    "random": false,
+    "reporters": [{
+            "name": "jasmine-spec-reporter#SpecReporter",
+            "options": {
+                "displayStacktrace": "all"
+            }
+        },
+        {
+            "name": "jasmine-pretty-html-reporter#Reporter",
+            "options": {
+                "path": "./"
+            }
+        }
+    ]
 }
