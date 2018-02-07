@@ -40,7 +40,7 @@ export class ProfileService implements IProfileService {
                             observer.onNext(ProfileFailureReasons.UNCONFIRMED_EMAIL);
                         }
                     });
-                } else
+                } else {
                     /* istanbul ignore else */
                     if (err && err.name === 'ValidationError') {
                         observer.onNext(ProfileFailureReasons.MISSING_REQUIRED);
@@ -48,6 +48,7 @@ export class ProfileService implements IProfileService {
                         /* istanbul ignore next */
                         observer.onNext(ProfileFailureReasons.UNKNOWN);
                     }
+                }
             }).then(() => {
                 observer.onCompleted();
             });
@@ -64,7 +65,62 @@ export class ProfileService implements IProfileService {
      * @memberof ProfileService
      */
     public updateProfile(user: IUser): Observable<ProfileFailureReasons> {
-        throw new Error('Method not implemented.');
+        const result = Observable.create((observer: Observer<ProfileFailureReasons>) => {
+            User.findById(user.id, (findError: any, existingUser: IUser | null) => {
+                /* istanbul ignore if */
+                if (findError) {
+                    observer.onError(findError);
+                    observer.onCompleted();
+                    return;
+                }
+
+                if (!existingUser) {
+                    observer.onNext(ProfileFailureReasons.NON_EXISTENT_PROFILE);
+                    observer.onCompleted();
+                    return;
+                }
+
+                User.schema.eachPath((path: string) => {
+                    if (existingUser.get(path) !== user.get(path)) {
+                        existingUser.set(path, user.get(path));
+                    }
+                });
+
+                existingUser.save().then((updatedUser: IUser) => {
+                    // The user has been created successfully.
+                    observer.onNext(ProfileFailureReasons.NONE);
+                }, (err: any) => {
+                    // There has been a problem creating the user.
+                    if (err && err.code === 11000) {
+                        observer.onNext(ProfileFailureReasons.DUPLICATE_EMAIL);
+                        return User.findOne({
+                            email: user.email
+                        }).exec().then((conflictingUser: IUser | null) => {
+                            conflictingUser = conflictingUser as IUser;
+                            if (conflictingUser.isDeactivated) {
+                                observer.onNext(ProfileFailureReasons.INACTIVE_PROFILE);
+                            }
+
+                            if (!conflictingUser.isEmailConfirmed) {
+                                observer.onNext(ProfileFailureReasons.UNCONFIRMED_EMAIL);
+                            }
+                        });
+                    } else {
+                        /* istanbul ignore else */
+                        if (err && err.name === 'ValidationError') {
+                            observer.onNext(ProfileFailureReasons.MISSING_REQUIRED);
+                        } else {
+                            /* istanbul ignore next */
+                            observer.onNext(ProfileFailureReasons.UNKNOWN);
+                        }
+                    }
+                }).then(() => {
+                    observer.onCompleted();
+                });
+            });
+        });
+
+        return result;
     }
 
     /**

@@ -536,6 +536,7 @@ describe('Profile Service', () => {
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
+                const userId: any = user.id;
                 user.email = 'different@somewhere.com';
                 try {
                     service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
@@ -545,7 +546,7 @@ describe('Profile Service', () => {
                         done();
                     }, () => {
                         try {
-                            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((updatedUser: IUser | null) => {
+                            User.findById(userId).exec().then((updatedUser: IUser | null) => {
                                 expect(updatedUser).toBeTruthy();
                                 updatedUser = updatedUser as IUser;
                                 expect(updatedUser.isEmailConfirmed).toBe(false);
