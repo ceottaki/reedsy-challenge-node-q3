@@ -9,5 +9,6 @@ export enum HttpVerbs {
     GET,
     POST,
     PUT,
-    DELETE
+    DELETE,
+    PATCH
 }

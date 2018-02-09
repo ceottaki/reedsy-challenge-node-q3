@@ -20,6 +20,7 @@ export class SessionController extends BaseController {
 
     /**
      * Creates an instance of SessionController.
+     *
      * @param {IJwtAuthenticationService} authenticationService The authentication service.
      * @memberof SessionController
      */

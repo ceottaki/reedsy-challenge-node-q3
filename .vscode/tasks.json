@@ -18,6 +18,57 @@
                     "applyTo": "allDocuments"
                 }
             ]
+        },
+        {
+            "type": "npm",
+            "script": "test",
+            "problemMatcher": [
+                {
+                    "applyTo": "allDocuments",
+                    "fileLocation": "absolute",
+                    "severity": "error",
+                    "owner": "javascript",
+                    "pattern": [
+                        {
+                            "regexp": "×.*"
+                        },
+                        {
+                            "regexp": "[^ ](.*)",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "at\\s.*\\((.*\\\\*.ts):(\\d+):(\\d+)\\)",
+                            "file": 1,
+                            "line": 2,
+                            "column": 3
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "npm",
+            "script": "cover",
+            "problemMatcher": [
+                {
+                    "applyTo": "allDocuments",
+                    "severity": "info",
+                    "owner": "cover",
+                    "pattern": [
+                        {
+                            "regexp": "=*\\s(Coverage summary)\\s=*",
+                            "file": 1,
+                        },
+                        {
+                            "regexp": "((\\S*)(?:\\s*):\\s*(\\d*%))\\s\\(\\s*(\\d*)\\/(\\d*)\\s*\\)",
+                            "message": 1,
+                            "line": 4,
+                            "column": 5,
+                            "loop": true
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

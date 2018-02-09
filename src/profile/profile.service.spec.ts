@@ -552,11 +552,14 @@ describe('Profile Service', () => {
                                 expect(updatedUser.isEmailConfirmed).toBe(false);
                                 expect(updatedUser.emailConfirmationToken).toBeTruthy();
 
-                                // Returns the user to its confirmed status for further tests.
+                                // Returns the user to its confirmed status and previous e-mail address for further tests.
                                 try {
-                                    updatedUser.isEmailConfirmed = true;
-                                    updatedUser.save().then(() => {
-                                        done();
+                                    updatedUser.email = MongoDbHelper.confirmedValidUser;
+                                    updatedUser.save().then((reupdatedUser: IUser) => {
+                                        reupdatedUser.isEmailConfirmed = true;
+                                        reupdatedUser.save().then(() => {
+                                            done();
+                                        });
                                     });
                                 } catch {
                                     done();
@@ -580,7 +583,7 @@ describe('Profile Service', () => {
 
     it('should deactivate a profile successfully when given a currently active profile', (done) => {
         const service = new ProfileService();
-        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>()
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
 
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
@@ -718,5 +721,114 @@ describe('Profile Service', () => {
             fail(error);
             done();
         }
+    });
+
+    it('should fail to confirm an e-mail address for a valid active account with a reason of non-existent profile when given an incorrect confirmation token', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        User.findOne({ email: MongoDbHelper.unconfirmedValidUser }).exec().then((unconfirmedUser: IUser | null) => {
+            unconfirmedUser = unconfirmedUser as IUser;
+            crypto.randomBytes(32, (err: Error, salt: Buffer) => {
+                if (err) {
+                    fail(err);
+                }
+
+                const randomConfirmationToken = salt.toString('hex');
+                service.confirmProfileEmailAddress(MongoDbHelper.unconfirmedValidUser, randomConfirmationToken).subscribe((reason: ProfileFailureReasons) => {
+                    reasons.push(reason);
+                }, (error: any) => {
+                    fail(error);
+                    done();
+                }, () => {
+                    expect(reasons.indexOf(ProfileFailureReasons.NON_EXISTENT_PROFILE) >= 0 && reasons.length === 1).toBe(true);
+                    done();
+                });
+            });
+        });
+    });
+
+    it('should successfully confirm an e-mail address for a valid active account with the correct confirmation token', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        User.findOne({ email: MongoDbHelper.unconfirmedValidUser }).exec().then((unconfirmedUser: IUser | null) => {
+            unconfirmedUser = unconfirmedUser as IUser;
+            const confirmationToken = unconfirmedUser.emailConfirmationToken as string;
+            service.confirmProfileEmailAddress(MongoDbHelper.unconfirmedValidUser, confirmationToken).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                User.findById((unconfirmedUser as IUser).id).exec().then((recentlyConfirmedUser: IUser | null) => {
+                    recentlyConfirmedUser = recentlyConfirmedUser as IUser;
+                    expect(recentlyConfirmedUser.isEmailConfirmed).toBe(true);
+
+                    // Return things to be as they were before the test.
+                    recentlyConfirmedUser.isEmailConfirmed = false;
+                    recentlyConfirmedUser.save().then(() => {
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
+    it('should not have any failure reasons when confirming an e-mail address for a valid active account with the correct confirmation token', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        User.findOne({ email: MongoDbHelper.unconfirmedValidUser }).exec().then((unconfirmedUser: IUser | null) => {
+            unconfirmedUser = unconfirmedUser as IUser;
+            const confirmationToken = unconfirmedUser.emailConfirmationToken as string;
+            service.confirmProfileEmailAddress(MongoDbHelper.unconfirmedValidUser, confirmationToken).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(reasons.indexOf(ProfileFailureReasons.NONE) >= 0 && reasons.length === 1).toBe(true);
+                done();
+            });
+        });
+    });
+
+    it('should fail to confirm an e-mail address for a valid active and confirmed account with a reason of duplicate e-mail when given a correct confirmation token', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((confirmedUser: IUser | null) => {
+            confirmedUser = confirmedUser as IUser;
+            const confirmationToken = confirmedUser.emailConfirmationToken;
+            service.confirmProfileEmailAddress(MongoDbHelper.confirmedValidUser, confirmationToken as string).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(reasons.indexOf(ProfileFailureReasons.DUPLICATE_EMAIL) >= 0 && reasons.length === 1).toBe(true);
+                done();
+            });
+        });
+    });
+
+    it('should fail to confirm an e-mail address for a valid inactive account with a reason of inactive profile when given a correct confirmation token', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        User.findOne({ email: MongoDbHelper.inactiveUnconfirmedValidUser }).exec().then((inactiveUser: IUser | null) => {
+            inactiveUser = inactiveUser as IUser;
+            const confirmationToken = inactiveUser.emailConfirmationToken;
+            service.confirmProfileEmailAddress(MongoDbHelper.inactiveUnconfirmedValidUser, confirmationToken as string).subscribe((reason: ProfileFailureReasons) => {
+                reasons.push(reason);
+            }, (error: any) => {
+                fail(error);
+                done();
+            }, () => {
+                expect(reasons.indexOf(ProfileFailureReasons.INACTIVE_PROFILE) >= 0 && reasons.length === 1).toBe(true);
+                done();
+            });
+        });
     });
 });

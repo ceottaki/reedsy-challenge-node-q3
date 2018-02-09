@@ -9,9 +9,22 @@ import { IUser } from '../core/user.model';
 import { ProfileFailureReasons } from './profile-failure-reasons.enum';
 import { IProfileService } from './profile.service.d';
 
+/**
+ * Represets a profile controller.
+ *
+ * @export
+ * @class ProfileController
+ * @extends {BaseController}
+ */
 export class ProfileController extends BaseController {
     private profileService: IProfileService;
 
+    /**
+     * Creates an instance of ProfileController.
+     *
+     * @param {IProfileService} profileService The profile service.
+     * @memberof ProfileController
+     */
     constructor(profileService: IProfileService) {
         super('/profile', 1);
         this.profileService = profileService;
@@ -22,6 +35,12 @@ export class ProfileController extends BaseController {
                 handler: this.getProfile,
                 verbs: [HttpVerbs.GET],
                 isAnonymous: false
+            },
+            {
+                path: this.defaultPath,
+                handler: this.patchProfile,
+                verbs: [HttpVerbs.PATCH],
+                isAnonymous: true
             },
             {
                 path: this.defaultPath,
@@ -48,6 +67,60 @@ export class ProfileController extends BaseController {
 
         res.statusCode = 200;
         res.json(response);
+    }
+
+    /**
+     * Confirms the e-mail address of a profile.
+     *
+     * @param {Request} req The HTTP request that should contain in its body an emailAddress and confirmationToken.
+     * @param {Response} res The HTTP response.
+     * @param {NextFunction} next The next function in the pipeline.
+     * @memberof ProfileController
+     */
+    public patchProfile(req: Request, res: Response, next: NextFunction): void {
+        const result: IStandardResponse = {
+            success: false,
+            message: ''
+        };
+
+        this.profileService.confirmProfileEmailAddress(req.body.emailAddress, req.body.confirmationToken)
+            .subscribe((reason: ProfileFailureReasons) => {
+                result.success = reason === ProfileFailureReasons.NONE;
+                switch (reason) {
+                    case ProfileFailureReasons.NONE:
+                        res.statusCode = 200;
+                        result.message += 'Your e-mail address has been confirmed successfully. ';
+                        break;
+
+                    case ProfileFailureReasons.DUPLICATE_EMAIL:
+                        res.statusCode = 409;
+                        result.message += 'This e-mail address had already been confirmed. ';
+                        break;
+
+                    case ProfileFailureReasons.INACTIVE_PROFILE:
+                        res.statusCode = 401;
+                        result.message += 'This profile is currently inactive. ';
+                        break;
+
+                    case ProfileFailureReasons.NON_EXISTENT_PROFILE:
+                        res.statusCode = 404;
+                        result.message += 'A profile with the given e-mail address and confirmation token was not found. ';
+                        break;
+
+                    case ProfileFailureReasons.UNKNOWN:
+                    default:
+                        res.statusCode = 500;
+                        result.message += 'There was an unknown error creating your profile. ';
+                        break;
+                }
+            }, undefined, () => {
+                // Subscription completed.
+                if (!isUndefined(result.message)) {
+                    result.message = result.message.trimRight();
+                }
+
+                res.json(result);
+            });
     }
 
     /**
@@ -79,7 +152,7 @@ export class ProfileController extends BaseController {
                     break;
 
                 case ProfileFailureReasons.INACTIVE_PROFILE:
-                    res.statusCode = 409;
+                    res.statusCode = 401;
                     result.message += 'The account is currently inactive. ';
                     break;
 

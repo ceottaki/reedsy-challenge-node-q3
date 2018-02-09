@@ -46,4 +46,15 @@ export interface IProfileService {
      * @memberof IProfileService
      */
     cleanProfileForClient(user: IUser): any;
+
+    /**
+     * When implemented it should set the e-mail confirmed flag of the profile with the given e-mail address to true
+     * if the given confirmation token matches the e-mail confirmation token of that profile.
+     *
+     * @param {string} emailAddress The e-mail address of the profile to be confirmed.
+     * @param {string} confirmationToken The confirmation token to match to the profile to be confirmed.
+     * @returns {Observable<ProfileFailureReasons>} An observable with possible reasons for failure to confirm the e-mail address.
+     * @memberof IProfileService
+     */
+    confirmProfileEmailAddress(emailAddress: string, confirmationToken: string): Observable<ProfileFailureReasons>;
 }

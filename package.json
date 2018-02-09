@@ -7,11 +7,12 @@
     "types": "dist/main",
     "scripts": {
         "start": "npm run build:watch",
-        "build": "tsc",
+        "build": "tsc --removeComments",
         "build:watch": "nodemon --delay 5 --ext ts --exec ./node_modules/.bin/ts-node -- ./src/main.ts",
         "lint": "tslint ./src/**/*.ts -t verbose",
-        "test": "nyc jasmine-ts --config=./jasmine.json",
-        "test:watch": "nodemon --delay 5 --ext ts --exec ./node_modules/.bin/nyc ./node_modules/.bin/jasmine-ts -- --config=./jasmine.json"
+        "test": "jasmine-ts --config=./jasmine.json",
+        "test:watch": "nodemon --delay 5 --ext ts --exec ./node_modules/.bin/jasmine-ts -- --config=./jasmine.json",
+        "cover": "nyc npm test & opener ./coverage/lcov-report/index.html"
     },
     "keywords": [
         "boilerplate"
@@ -38,6 +39,7 @@
         "mongodb-download": "2.2.3",
         "nodemon": "1.14.10",
         "nyc": "11.4.1",
+        "opener": "1.4.3",
         "ts-node": "4.1.0",
         "tslint": "5.9.1",
         "typescript": "2.6.2"

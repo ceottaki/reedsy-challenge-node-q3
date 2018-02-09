@@ -136,6 +136,13 @@ export class App {
                             route.handler.bind(controller));
                         break;
 
+                    case HttpVerbs.PATCH:
+                        this.router.patch(
+                            routePath,
+                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            route.handler.bind(controller));
+                        break;
+
                     case HttpVerbs.POST:
                         this.router.post(
                             routePath,
