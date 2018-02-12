@@ -88,10 +88,10 @@ export class ProfileService implements IProfileService {
                 });
 
                 existingUser.save().then((updatedUser: IUser) => {
-                    // The user has been created successfully.
+                    // The user has been updated successfully.
                     observer.onNext(ProfileFailureReasons.NONE);
                 }, (err: any) => {
-                    // There has been a problem creating the user.
+                    // There has been a problem updating the user.
                     if (err && err.code === 11000) {
                         observer.onNext(ProfileFailureReasons.DUPLICATE_EMAIL);
                         return User.findOne({
@@ -132,7 +132,45 @@ export class ProfileService implements IProfileService {
      * @memberof ProfileService
      */
     public deactivateProfile(user: IUser): Observable<ProfileFailureReasons> {
-        throw new Error('Method not implemented.');
+        const result = Observable.create((observer: Observer<ProfileFailureReasons>) => {
+            User.findById(user.id, (findError: any, existingUser: IUser | null) => {
+                /* istanbul ignore if */
+                if (findError) {
+                    observer.onError(findError);
+                    observer.onNext(ProfileFailureReasons.UNKNOWN);
+                    observer.onCompleted();
+                    return;
+                }
+
+                if (!existingUser) {
+                    observer.onNext(ProfileFailureReasons.NON_EXISTENT_PROFILE);
+                    observer.onCompleted();
+                    return;
+                }
+
+                if (existingUser.isDeactivated) {
+                    observer.onNext(ProfileFailureReasons.INACTIVE_PROFILE);
+                    observer.onCompleted();
+                    return;
+                }
+
+                existingUser.isDeactivated = true;
+                existingUser.save().then((updatedUser: IUser) => {
+                    // The user has been de-activated successfully.
+                    observer.onNext(ProfileFailureReasons.NONE);
+                },
+                    /* istanbul ignore next */
+                    (err: any) => {
+                        // There has been a problem de-activating the user.
+                        /* istanbul ignore next */
+                        observer.onNext(ProfileFailureReasons.UNKNOWN);
+                    }).then(() => {
+                        observer.onCompleted();
+                    });
+            });
+        });
+
+        return result;
     }
 
     /**

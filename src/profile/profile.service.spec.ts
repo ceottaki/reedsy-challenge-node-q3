@@ -684,6 +684,7 @@ describe('Profile Service', () => {
                         done();
                     }, () => {
                         expect(reasons.indexOf(ProfileFailureReasons.INACTIVE_PROFILE) >= 0 && reasons.length === 1).toBe(true);
+                        done();
                     });
                 } catch (error) {
                     fail(error);
@@ -716,6 +717,7 @@ describe('Profile Service', () => {
                 done();
             }, () => {
                 expect(reasons.indexOf(ProfileFailureReasons.NON_EXISTENT_PROFILE) >= 0 && reasons.length === 1).toBe(true);
+                done();
             });
         } catch (error) {
             fail(error);

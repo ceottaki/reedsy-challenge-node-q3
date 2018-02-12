@@ -299,6 +299,14 @@ export class UserSchema extends Schema {
 
             user.isEmailConfirmed = false;
             user.emailConfirmationToken = salt.toString('hex');
+
+            // TODO: Call something here that will queue an e-mail to the new e-mail address including a link to confirm it.
+            // This will not be added as part of the boilerplate as it is an infrastructure concern and will depend on
+            // which environment this API is deployed to.
+
+            // I would recommend that the link is built with both the e-mail address and the confirmation token, perhaps
+            // turning the e-mail address into a hex string such as with `new Buffer(user.email, 'utf8').toString('hex');`.
+            // A client-side application would then decode the e-mail and call this API's e-mail confirmation endpoint.
             return next();
         });
     }
