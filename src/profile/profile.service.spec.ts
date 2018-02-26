@@ -288,9 +288,8 @@ describe('Profile Service', () => {
 
                     const randomAboutMe = salt.toString('hex');
                     user = user as IUser;
-                    user.aboutMe = randomAboutMe;
                     try {
-                        service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                        service.updateProfile(user.id, { aboutMe: randomAboutMe }).subscribe((reason: ProfileFailureReasons) => {
                             reasons.push(reason);
                         }, (error: any) => {
                             fail(error);
@@ -326,9 +325,8 @@ describe('Profile Service', () => {
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
-                user.aboutMe = 'Test about me.';
                 try {
-                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                    service.updateProfile(user.id, { aboutMe: 'Test about me.' }).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);
@@ -348,6 +346,43 @@ describe('Profile Service', () => {
         }
     });
 
+    it('should not update an existing user\'s created at time and date even when provided with a new one', (done) => {
+        const service = new ProfileService();
+        const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
+
+        try {
+            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
+                user = user as IUser;
+                const currentCreatedAt: Date = user.createdAt;
+                try {
+                    service.updateProfile(user.id, { createdAt: new Date(2000, 0, 1) }).subscribe((reason: ProfileFailureReasons) => {
+                        reasons.push(reason);
+                    }, (error: any) => {
+                        fail(error);
+                        done();
+                    }, () => {
+                        try {
+                            User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((updatedUser: IUser | null) => {
+                                expect(updatedUser).toBeTruthy();
+                                expect((updatedUser as IUser).createdAt).toEqual(currentCreatedAt);
+                                done();
+                            });
+                        } catch (error) {
+                            fail(error);
+                            done();
+                        }
+                    });
+                } catch (error) {
+                    fail(error);
+                    done();
+                }
+            });
+        } catch (error) {
+            fail(error);
+            done();
+        }
+    });
+
     it('should fail with a reason of duplicate e-mail when trying to update a profile to an existing active and confirmed e-mail address', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
@@ -355,9 +390,8 @@ describe('Profile Service', () => {
         try {
             User.findOne({ email: MongoDbHelper.unconfirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
-                user.email = MongoDbHelper.confirmedValidUser;
                 try {
-                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                    service.updateProfile(user.id, { email: MongoDbHelper.confirmedValidUser }).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);
@@ -384,9 +418,8 @@ describe('Profile Service', () => {
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
-                user.email = MongoDbHelper.unconfirmedValidUser;
                 try {
-                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                    service.updateProfile(user.id, { email: MongoDbHelper.unconfirmedValidUser }).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);
@@ -415,9 +448,8 @@ describe('Profile Service', () => {
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
-                user.email = MongoDbHelper.inactiveValidUser;
                 try {
-                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                    service.updateProfile(user.id, { email: MongoDbHelper.inactiveValidUser }).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);
@@ -446,9 +478,8 @@ describe('Profile Service', () => {
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
-                user.email = MongoDbHelper.inactiveUnconfirmedValidUser;
                 try {
-                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                    service.updateProfile(user.id, { email: MongoDbHelper.inactiveUnconfirmedValidUser }).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);
@@ -477,10 +508,9 @@ describe('Profile Service', () => {
 
         try {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
-                const userAny = user as any;
-                userAny.birthday = undefined;
+                user = user as IUser;
                 try {
-                    service.updateProfile(userAny).subscribe((reason: ProfileFailureReasons) => {
+                    service.updateProfile(user.id, { birthday: undefined }).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);
@@ -512,21 +542,29 @@ describe('Profile Service', () => {
             timeZone: 'Europe/London'
         };
 
-        try {
-            service.updateProfile(nonExistentUser).subscribe((reason: ProfileFailureReasons) => {
-                reasons.push(reason);
-            }, (error: any) => {
+        crypto.randomBytes(12, (err: Error, salt: Buffer) => {
+            if (err) {
+                fail(err);
+            }
+
+            const randomId = salt.toString('hex');
+            nonExistentUser._id = mongoose.Types.ObjectId(randomId);
+            try {
+                service.updateProfile(randomId, nonExistentUser).subscribe((reason: ProfileFailureReasons) => {
+                    reasons.push(reason);
+                }, (error: any) => {
+                    fail(error);
+                    done();
+                }, () => {
+                    expect(reasons.indexOf(ProfileFailureReasons.NON_EXISTENT_PROFILE) >= 0
+                        && reasons.length === 1).toBe(true);
+                    done();
+                });
+            } catch (error) {
                 fail(error);
                 done();
-            }, () => {
-                expect(reasons.indexOf(ProfileFailureReasons.NON_EXISTENT_PROFILE) >= 0
-                    && reasons.length === 1).toBe(true);
-                done();
-            });
-        } catch (error) {
-            fail(error);
-            done();
-        }
+            }
+        });
     });
 
     it('should make an e-mail address unconfirmed when successfully updating the e-mail address of a profile', (done) => {
@@ -537,9 +575,8 @@ describe('Profile Service', () => {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
                 const userId: any = user.id;
-                user.email = 'different@somewhere.com';
                 try {
-                    service.updateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                    service.updateProfile(userId, { email: 'different@somewhere.com' }).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);

@@ -232,6 +232,9 @@ export class UserSchema extends Schema {
         if (user.isNew) {
             user.createdAt = new Date();
             user.blacklistedTokens = new Array<string>();
+        } else if (user.isModified('createdAt')) {
+            // Changing the created at time and date is not allowed.
+            user.unmarkModified('createdAt');
         }
 
         user.modifiedAt = new Date();

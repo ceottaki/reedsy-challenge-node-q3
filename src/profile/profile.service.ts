@@ -60,13 +60,14 @@ export class ProfileService implements IProfileService {
     /**
      * Updates an existing user profile with the given profile.
      *
-     * @param {IUser} user The user profile to be updated.
+     * @param {string} profileId The id of the user profile to be updated.
+     * @param {*} changes An object with the properties to be changed in a user profile.
      * @returns {Observable<ProfileFailureReasons>} An observable with possible reasons for failure to update a profile.
      * @memberof ProfileService
      */
-    public updateProfile(user: IUser): Observable<ProfileFailureReasons> {
+    public updateProfile(profileId: string, changes: any): Observable<ProfileFailureReasons> {
         const result = Observable.create((observer: Observer<ProfileFailureReasons>) => {
-            User.findById(user.id, (findError: any, existingUser: IUser | null) => {
+            User.findById(profileId, (findError: any, existingUser: IUser | null) => {
                 /* istanbul ignore if */
                 if (findError) {
                     observer.onError(findError);
@@ -82,8 +83,8 @@ export class ProfileService implements IProfileService {
                 }
 
                 User.schema.eachPath((path: string) => {
-                    if (existingUser.get(path) !== user.get(path)) {
-                        existingUser.set(path, user.get(path));
+                    if (changes.hasOwnProperty(path) && existingUser.get(path) !== changes[path]) {
+                        existingUser.set(path, changes[path]);
                     }
                 });
 
@@ -94,18 +95,17 @@ export class ProfileService implements IProfileService {
                     // There has been a problem updating the user.
                     if (err && err.code === 11000) {
                         observer.onNext(ProfileFailureReasons.DUPLICATE_EMAIL);
-                        return User.findOne({
-                            email: user.email
-                        }).exec().then((conflictingUser: IUser | null) => {
-                            conflictingUser = conflictingUser as IUser;
-                            if (conflictingUser.isDeactivated) {
-                                observer.onNext(ProfileFailureReasons.INACTIVE_PROFILE);
-                            }
+                        return User.findOne({ email: changes.email || existingUser.email })
+                            .exec().then((conflictingUser: IUser | null) => {
+                                conflictingUser = conflictingUser as IUser;
+                                if (conflictingUser.isDeactivated) {
+                                    observer.onNext(ProfileFailureReasons.INACTIVE_PROFILE);
+                                }
 
-                            if (!conflictingUser.isEmailConfirmed) {
-                                observer.onNext(ProfileFailureReasons.UNCONFIRMED_EMAIL);
-                            }
-                        });
+                                if (!conflictingUser.isEmailConfirmed) {
+                                    observer.onNext(ProfileFailureReasons.UNCONFIRMED_EMAIL);
+                                }
+                            });
                     } else {
                         /* istanbul ignore else */
                         if (err && err.name === 'ValidationError') {

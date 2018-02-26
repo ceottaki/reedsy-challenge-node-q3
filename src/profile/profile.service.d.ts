@@ -22,11 +22,12 @@ export interface IProfileService {
     /**
      * When implemented it should update an existing user profile with the given profile.
      *
-     * @param {IUser} user The user profile to be updated.
+     * @param {string} profileId The id of the user profile to be updated.
+     * @param {*} changes An object with the properties to be changed in a user profile.
      * @returns {Observable<ProfileFailureReasons>} An observable with possible reasons for failure to update a profile.
      * @memberof IProfileService
      */
-    updateProfile(user: IUser): Observable<ProfileFailureReasons>;
+    updateProfile(profileId: string, changes: any): Observable<ProfileFailureReasons>;
 
     /**
      * When implemented it should deactivate the given existing user profile.
