@@ -37,7 +37,7 @@
         "jasmine-ts": "0.2.1",
         "mockgoose": "7.3.3",
         "mongodb-download": "2.2.3",
-        "nodemon": "1.14.12",
+        "nodemon": "1.14.10",
         "nyc": "11.4.1",
         "opener": "1.4.3",
         "ts-node": "4.1.0",
