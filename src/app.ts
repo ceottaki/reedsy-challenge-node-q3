@@ -112,7 +112,15 @@ export class App {
      */
     public addController(controller: IController): void {
         controller.routes.forEach((route) => {
-            const routePath = controller.useApiVersionInPath ? `/v${controller.apiVersion}${route.path}` : route.path;
+            let routePath: string | RegExp | Array<string | RegExp>;
+
+            // TODO: Handle array routes when adding the API version in path.
+            if (route.path instanceof RegExp) {
+                routePath = new RegExp((controller.useApiVersionInPath ? `\\/v${controller.apiVersion}` : '') + route.path.source);
+            } else {
+                routePath = controller.useApiVersionInPath ? `/v${controller.apiVersion}${route.path}` : route.path;
+            }
+
             route.verbs.forEach((v) => {
                 switch (v) {
                     case HttpVerbs.ALL:
