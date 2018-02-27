@@ -75,8 +75,12 @@ describe('Profile Service', () => {
                 password: MongoDbHelper.validPassword,
                 fullName: 'That Person',
                 birthday: new Date(2000, 0, 1)
-            } as IUser).subscribe((reason: ProfileFailureReasons) => {
-                reasons.push(reason);
+            } as IUser).subscribe((reason: ProfileFailureReasons | string) => {
+                if (typeof (reason) === 'string') {
+                    console.log(reason);
+                } else {
+                    reasons.push(reason);
+                }
             }, (error: any) => {
                 fail(error);
                 done();
@@ -102,8 +106,12 @@ describe('Profile Service', () => {
                 password: MongoDbHelper.validPassword,
                 fullName: 'That Person',
                 birthday: new Date(2000, 0, 1)
-            } as IUser).subscribe((reason: ProfileFailureReasons) => {
-                reasons.push(reason);
+            } as IUser).subscribe((reason: ProfileFailureReasons | string) => {
+                if (typeof (reason) === 'string') {
+                    console.log(reason);
+                } else {
+                    reasons.push(reason);
+                }
             }, (error: any) => {
                 fail(error);
                 done();
@@ -127,8 +135,12 @@ describe('Profile Service', () => {
                 password: MongoDbHelper.validPassword,
                 fullName: 'That Person',
                 birthday: new Date(2000, 0, 1)
-            } as IUser).subscribe((reason: ProfileFailureReasons) => {
-                reasons.push(reason);
+            } as IUser).subscribe((reason: ProfileFailureReasons | string) => {
+                if (typeof (reason) === 'string') {
+                    console.log(reason);
+                } else {
+                    reasons.push(reason);
+                }
             }, (error: any) => {
                 fail(error);
                 done();
@@ -152,8 +164,12 @@ describe('Profile Service', () => {
                 password: MongoDbHelper.validPassword,
                 fullName: 'That Person',
                 birthday: new Date(2000, 0, 1)
-            } as IUser).subscribe((reason: ProfileFailureReasons) => {
-                reasons.push(reason);
+            } as IUser).subscribe((reason: ProfileFailureReasons | string) => {
+                if (typeof (reason) === 'string') {
+                    console.log(reason);
+                } else {
+                    reasons.push(reason);
+                }
             }, (error: any) => {
                 fail(error);
                 done();
@@ -180,8 +196,12 @@ describe('Profile Service', () => {
                 password: MongoDbHelper.validPassword,
                 fullName: 'That Person',
                 birthday: new Date(2000, 0, 1)
-            } as IUser).subscribe((reason: ProfileFailureReasons) => {
-                reasons.push(reason);
+            } as IUser).subscribe((reason: ProfileFailureReasons | string) => {
+                if (typeof (reason) === 'string') {
+                    console.log(reason);
+                } else {
+                    reasons.push(reason);
+                }
             }, (error: any) => {
                 fail(error);
                 done();
@@ -208,8 +228,12 @@ describe('Profile Service', () => {
                 password: MongoDbHelper.validPassword,
                 fullName: 'That Person',
                 birthday: new Date(2000, 0, 1)
-            } as IUser).subscribe((reason: ProfileFailureReasons) => {
-                reasons.push(reason);
+            } as IUser).subscribe((reason: ProfileFailureReasons | string) => {
+                if (typeof (reason) === 'string') {
+                    console.log(reason);
+                } else {
+                    reasons.push(reason);
+                }
             }, (error: any) => {
                 fail(error);
                 done();
@@ -236,8 +260,12 @@ describe('Profile Service', () => {
                 email: MongoDbHelper.inactiveUnconfirmedValidUser,
                 password: MongoDbHelper.validPassword,
                 fullName: 'That Person'
-            } as IUser).subscribe((reason: ProfileFailureReasons) => {
-                reasons.push(reason);
+            } as IUser).subscribe((reason: ProfileFailureReasons | string) => {
+                if (typeof (reason) === 'string') {
+                    console.log(reason);
+                } else {
+                    reasons.push(reason);
+                }
             }, (error: any) => {
                 fail(error);
                 done();

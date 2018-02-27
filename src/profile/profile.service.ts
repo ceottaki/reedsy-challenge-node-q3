@@ -16,14 +16,15 @@ export class ProfileService implements IProfileService {
      * Creates a new user profile with the given user information.
      *
      * @param {IUser} user The user profile to be created.
-     * @returns {Observable<ProfileFailureReasons>} An observable with possible reasons for failure to create a profile.
+     * @returns {Observable<ProfileFailureReasons | string>} An observable with reasons for failure to create a profile or its id string.
      * @memberof ProfileService
      */
-    public createNewProfile(user: IUser): Observable<ProfileFailureReasons> {
-        const result = Observable.create((observer: Observer<ProfileFailureReasons>) => {
+    public createNewProfile(user: IUser): Observable<ProfileFailureReasons | string> {
+        const result = Observable.create((observer: Observer<ProfileFailureReasons | string>) => {
             User.create([user]).then((newUsers: IUser[]) => {
                 // The user has been created successfully.
                 observer.onNext(ProfileFailureReasons.NONE);
+                observer.onNext(newUsers[0].id as string);
             }, (err: any) => {
                 // There has been a problem creating the user.
                 if (err && err.code === 11000) {
@@ -95,7 +96,7 @@ export class ProfileService implements IProfileService {
                     // There has been a problem updating the user.
                     if (err && err.code === 11000) {
                         observer.onNext(ProfileFailureReasons.DUPLICATE_EMAIL);
-                        return User.findOne({ email: changes.email || existingUser.email })
+                        return User.findOne({ email: changes.email })
                             .exec().then((conflictingUser: IUser | null) => {
                                 conflictingUser = conflictingUser as IUser;
                                 if (conflictingUser.isDeactivated) {

@@ -14,10 +14,10 @@ export interface IProfileService {
      * When implemented it should create a new user profile with the given information.
      *
      * @param {IUser} user The user profile to be created.
-     * @returns {Observable<ProfileFailureReasons>} An observable with possible reasons for failure to create a profile.
+     * @returns {Observable<ProfileFailureReasons | string>} An observable with reasons for failure to create a profile or its id string.
      * @memberof IProfileService
      */
-    createNewProfile(user: IUser): Observable<ProfileFailureReasons>;
+    createNewProfile(user: IUser): Observable<ProfileFailureReasons | string>;
 
     /**
      * When implemented it should update an existing user profile with the given profile.
