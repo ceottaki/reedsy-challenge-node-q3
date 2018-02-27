@@ -5,6 +5,7 @@ import { Observable, Observer } from 'rx';
 import { IUser, User } from '../core/user.model';
 import { IJwtAuthenticationService } from './jwt-authentication.service.d';
 import { LogOnInfo } from './logOnInfo.model';
+import { ILogOnResult } from './logOnResult';
 
 /**
  * Represents an authentication service that allows users to log on and log off from the application.
@@ -29,14 +30,14 @@ export class JwtAuthenticationService implements IJwtAuthenticationService {
      * Logs on a user with the given log on information.
      *
      * @param {LogOnInfo} logOnInfo The log on information for a user.
-     * @returns {Observable<string | null>} An observable with the token if successfully authenticated; null otherwise.
+     * @returns {Observable<ILogOnResult | null>} An observable with the token if successfully authenticated; null otherwise.
      * @memberof JwtAuthenticationService
      */
-    public logOn(logOnInfo: LogOnInfo): Observable<string | null> {
-        let result: Observable<string | null>;
+    public logOn(logOnInfo: LogOnInfo): Observable<ILogOnResult | null> {
+        let result: Observable<ILogOnResult | null>;
 
         if (!logOnInfo.checkValidity()) {
-            return Observable.of<string | null>(null);
+            return Observable.of<ILogOnResult | null>(null);
         }
 
         result = Observable.fromPromise(
@@ -44,7 +45,7 @@ export class JwtAuthenticationService implements IJwtAuthenticationService {
                 email: logOnInfo.emailAddress
             }).exec()).flatMap((user) => {
                 if (!user) {
-                    return Observable.of<string | null>(null);
+                    return Observable.of<ILogOnResult | null>(null);
                 }
 
                 return user.comparePassword(logOnInfo.password).map((isMatch) => {
@@ -54,7 +55,11 @@ export class JwtAuthenticationService implements IJwtAuthenticationService {
                             expiresIn: '30m',
                             jwtid: jti
                         });
-                        return token;
+
+                        return {
+                            token,
+                            profileId: user.id
+                        };
                     }
 
                     return null;

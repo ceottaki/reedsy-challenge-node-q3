@@ -6,6 +6,14 @@
  */
 export interface ISession {
     /**
+     * Gets or sets the profile id of the user logged in to the current session.
+     *
+     * @type {string}
+     * @memberof ISession
+     */
+    profileId: string;
+
+    /**
      * Gets or sets the email address of the user logged in to the current session.
      *
      * @type {string}

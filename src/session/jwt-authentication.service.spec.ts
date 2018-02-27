@@ -6,6 +6,7 @@ import { MongoDbHelper } from '../core/mongo-db-helper';
 import { IUser, User } from '../core/user.model';
 import { JwtAuthenticationService } from './jwt-authentication.service';
 import { LogOnInfo } from './logOnInfo.model';
+import { ILogOnResult } from './logOnResult';
 
 // This is a requirement of Mongoose to set which promise framework it will use.
 (mongoose as any).Promise = global.Promise;
@@ -64,8 +65,11 @@ describe('JWT Authentication Service', () => {
     it('should log on a valid user successfully with the correct password', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(MongoDbHelper.confirmedValidUser, MongoDbHelper.validPassword)).subscribe((token) => {
-                expect(token).toBeTruthy();
+            new LogOnInfo(MongoDbHelper.confirmedValidUser, MongoDbHelper.validPassword)).subscribe((logOnResult: ILogOnResult | null) => {
+                logOnResult = logOnResult as ILogOnResult;
+                expect(logOnResult).toBeTruthy();
+                expect(logOnResult.token).toBeTruthy();
+                expect(logOnResult.profileId).toBeTruthy();
                 done();
             });
     });
@@ -73,8 +77,8 @@ describe('JWT Authentication Service', () => {
     it('should not log on a valid user with the incorrect password', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(MongoDbHelper.confirmedValidUser, invalidPassword)).subscribe((token) => {
-                expect(token).toBeFalsy();
+            new LogOnInfo(MongoDbHelper.confirmedValidUser, invalidPassword)).subscribe((logOnResult: ILogOnResult | null) => {
+                expect(logOnResult).toBeFalsy();
                 done();
             });
     });
@@ -82,8 +86,8 @@ describe('JWT Authentication Service', () => {
     it('should not log on a user with malformed e-mail address', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(malformedEmailAddress, MongoDbHelper.validPassword)).subscribe((token) => {
-                expect(token).toBeFalsy();
+            new LogOnInfo(malformedEmailAddress, MongoDbHelper.validPassword)).subscribe((logOnResult: ILogOnResult | null) => {
+                expect(logOnResult).toBeFalsy();
                 done();
             });
     });
@@ -91,8 +95,8 @@ describe('JWT Authentication Service', () => {
     it('should not log on a user with a blank password', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(MongoDbHelper.confirmedValidUser, '')).subscribe((token) => {
-                expect(token).toBeFalsy();
+            new LogOnInfo(MongoDbHelper.confirmedValidUser, '')).subscribe((logOnResult: ILogOnResult | null) => {
+                expect(logOnResult).toBeFalsy();
                 done();
             });
     });
@@ -100,8 +104,9 @@ describe('JWT Authentication Service', () => {
     it('should not log on a valid unconfirmed user with the correct password', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(MongoDbHelper.unconfirmedValidUser, MongoDbHelper.validPassword)).subscribe((token) => {
-                expect(token).toBeFalsy();
+            new LogOnInfo(MongoDbHelper.unconfirmedValidUser, MongoDbHelper.validPassword))
+            .subscribe((logOnResult: ILogOnResult | null) => {
+                expect(logOnResult).toBeFalsy();
                 done();
             });
     });
@@ -109,16 +114,16 @@ describe('JWT Authentication Service', () => {
     it('should not log on a valid unconfirmed user with the incorrect password', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(MongoDbHelper.unconfirmedValidUser, invalidPassword)).subscribe((token) => {
-                expect(token).toBeFalsy();
+            new LogOnInfo(MongoDbHelper.unconfirmedValidUser, invalidPassword)).subscribe((logOnResult: ILogOnResult | null) => {
+                expect(logOnResult).toBeFalsy();
                 done();
             });
     });
 
     it('should not log on an invalid user', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
-        service.logOn(new LogOnInfo(invalidUser, MongoDbHelper.validPassword)).subscribe((token) => {
-            expect(token).toBeFalsy();
+        service.logOn(new LogOnInfo(invalidUser, MongoDbHelper.validPassword)).subscribe((logOnResult: ILogOnResult | null) => {
+            expect(logOnResult).toBeFalsy();
             done();
         });
     });
@@ -126,8 +131,9 @@ describe('JWT Authentication Service', () => {
     it('should successfully log out a logged in user', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(MongoDbHelper.confirmedValidUser, MongoDbHelper.validPassword)).subscribe((token) => {
-                const payload: any = jwt.verify(token as string, 'jwtSecret');
+            new LogOnInfo(MongoDbHelper.confirmedValidUser, MongoDbHelper.validPassword)).subscribe((logOnResult: ILogOnResult | null) => {
+                logOnResult = logOnResult as ILogOnResult;
+                const payload: any = jwt.verify(logOnResult.token, 'jwtSecret');
                 User.findById(payload._id, (err: any, user: IUser | null) => {
                     service.logOut(user as IUser, payload.jti).subscribe((succeeded: boolean) => {
                         expect(succeeded).toBe(true);
@@ -140,8 +146,9 @@ describe('JWT Authentication Service', () => {
     it('should add the current token to the user\'s blacklist when logged out', (done) => {
         const service = new JwtAuthenticationService('jwtSecret');
         service.logOn(
-            new LogOnInfo(MongoDbHelper.confirmedValidUser, MongoDbHelper.validPassword)).subscribe((token) => {
-                const payload: any = jwt.verify(token as string, 'jwtSecret');
+            new LogOnInfo(MongoDbHelper.confirmedValidUser, MongoDbHelper.validPassword)).subscribe((logOnResult: ILogOnResult | null) => {
+                logOnResult = logOnResult as ILogOnResult;
+                const payload: any = jwt.verify(logOnResult.token, 'jwtSecret');
                 User.findById(payload._id, (err: any, user: IUser | null) => {
                     service.logOut(user as IUser, payload.jti).subscribe((succeeded: boolean) => {
                         expect((user as IUser).blacklistedTokens.indexOf(payload.jti)).toBeGreaterThanOrEqual(0);

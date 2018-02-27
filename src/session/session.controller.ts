@@ -6,6 +6,7 @@ import { IStandardResponse } from '../core/standard-response';
 import { IUser } from '../core/user.model';
 import { IJwtAuthenticationService } from './jwt-authentication.service.d';
 import { LogOnInfo } from './logOnInfo.model';
+import { ILogOnResult } from './logOnResult';
 import { ISession } from './session.model';
 
 /**
@@ -58,15 +59,13 @@ export class SessionController extends BaseController {
     public postSession(req: Request, res: Response, next: NextFunction): void {
         const logOnInfo: LogOnInfo = new LogOnInfo(req.body.emailAddress, req.body.password);
 
-        this.authenticationService.logOn(logOnInfo).subscribe((token) => {
+        this.authenticationService.logOn(logOnInfo).subscribe((logOnResult: ILogOnResult | null) => {
             const result: IStandardResponse = {
-                success: token !== null,
-                message: token !== null ?
+                success: logOnResult !== null,
+                message: logOnResult !== null ?
                     'You have been successfully authenticated.' :
                     'Authentication failed. E-mail address or password incorrect.',
-                data: {
-                    token
-                }
+                data: logOnResult !== null ? { token: logOnResult.token, profileId: logOnResult.profileId } : undefined
             };
 
             res.statusCode = result.success ? 201 : 401;
@@ -85,6 +84,7 @@ export class SessionController extends BaseController {
     public getSession(req: Request, res: Response, next: NextFunction): void {
         const user: IUser = req.user as IUser;
         const result: ISession = {
+            profileId: user.id,
             email: user.email,
             fullName: user.fullName
         };
