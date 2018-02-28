@@ -11,7 +11,10 @@ import { ILogOnResult } from './logOnResult';
 // This is a requirement of Mongoose to set which promise framework it will use.
 (mongoose as any).Promise = global.Promise;
 
-let originalJasmineTimeout: number;
+// Jasmine's timeout needs to be increased a lot because when running the tests for the first time...
+// ...MongoDB will be downloaded by Mockgoose to allow mocking to happen.
+const originalJasmineTimeout: number = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 const invalidUser: string = 'bladibla@somewhere.com';
 const invalidPassword: string = 'bladiblah';
@@ -19,11 +22,6 @@ const malformedEmailAddress: string = 'not-email-addr@...';
 
 describe('JWT Authentication Service', () => {
     beforeAll((done) => {
-        // Jasmine's timeout needs to be increased a lot because when running the tests for the first time...
-        // ...MongoDB will be downloaded by Mockgoose to allow mocking to happen.
-        originalJasmineTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
-
         // Sets up a mocked instance of MongoDB to be used through Mongoose.
         MongoDbHelper.openMockDatabaseConnection(
             mongoose,
