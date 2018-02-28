@@ -49,7 +49,7 @@ export class JwtAuthenticationService implements IJwtAuthenticationService {
                 }
 
                 return user.comparePassword(logOnInfo.password).map((isMatch) => {
-                    if (isMatch && user.isEmailConfirmed) {
+                    if (isMatch && user.isEmailConfirmed && !user.isDeactivated) {
                         const jti = crypto.randomBytes(32).toString('hex');
                         const token: string = jwt.sign(user.toObject(), this.jwtSecret, {
                             expiresIn: '30m',

@@ -201,7 +201,7 @@ export class App {
                     return;
                 }
 
-                if (user && (user.blacklistedTokens.indexOf(payload.jti) < 0)) {
+                if (user && !user.isDeactivated && (user.blacklistedTokens.indexOf(payload.jti) < 0)) {
                     done(null, user, payload.jti);
                 } else {
                     done(null, null);

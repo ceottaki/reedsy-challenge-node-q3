@@ -20,6 +20,9 @@ export class ProfileService implements IProfileService {
      * @memberof ProfileService
      */
     public createNewProfile(user: IUser): Observable<ProfileFailureReasons | string> {
+        // TODO: Allow profile re-activation.
+        // If a user is trying to create a new profile with an e-mail address of a profile that has been previously deactivated,
+        // they should be allowed to do so.
         const result = Observable.create((observer: Observer<ProfileFailureReasons | string>) => {
             User.create([user]).then((newUsers: IUser[]) => {
                 // The user has been created successfully.
