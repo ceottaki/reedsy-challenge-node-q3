@@ -222,7 +222,8 @@ export class ProfileController extends BaseController {
         const user: IUser = req.user as IUser;
         const profileId: string = req.params[0] as string;
         const result: IStandardResponse = {
-            success: false
+            success: false,
+            message: ''
         };
 
         if (user.id !== profileId) {
@@ -234,14 +235,48 @@ export class ProfileController extends BaseController {
             return;
         }
 
-        // for (const property in req.body) {
-        //     if (property && req.body.hasOwnProperty(property)) {
-        //     }
-        // }
+        this.profileService.updateProfile(profileId, req.body).subscribe((reason: ProfileFailureReasons) => {
+            result.success = reason === ProfileFailureReasons.NONE;
+            switch (reason) {
+                case ProfileFailureReasons.NONE:
+                    res.statusCode = 200;
+                    result.message += 'Your profile has been updated successfully. ';
+                    break;
 
-        res.statusCode = 501;
-        result.message = 'This method has not been implemented yet.';
-        res.json(result);
+                case ProfileFailureReasons.DUPLICATE_EMAIL:
+                    res.statusCode = 409;
+                    result.message += 'An account with the new e-mail address already exists. ';
+                    break;
+
+                case ProfileFailureReasons.INACTIVE_PROFILE:
+                    res.statusCode = 401;
+                    result.message += 'The account with the new e-mail address is currently inactive. ';
+                    break;
+
+                case ProfileFailureReasons.MISSING_REQUIRED:
+                    res.statusCode = 400;
+                    result.message += 'You have attempted to remove a required field from your profile. ';
+                    break;
+
+                case ProfileFailureReasons.UNCONFIRMED_EMAIL:
+                    res.statusCode = 409;
+                    result.message += 'The account with the new e-mail address for this account has not been confirmed yet. ';
+                    break;
+
+                case ProfileFailureReasons.UNKNOWN:
+                default:
+                    res.statusCode = 500;
+                    result.message += 'There was an unknown error creating your profile. ';
+                    break;
+            }
+        }, undefined, () => {
+            // Subscription completed.
+            if (!isUndefined(result.message)) {
+                result.message = result.message.trimRight();
+            }
+
+            res.json(result);
+        });
     }
 
     /**
