@@ -654,7 +654,7 @@ describe('Profile Service', () => {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
                 try {
-                    service.deactivateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                    service.deactivateProfile(user.id).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);
@@ -699,7 +699,7 @@ describe('Profile Service', () => {
             User.findOne({ email: MongoDbHelper.confirmedValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
                 try {
-                    service.deactivateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                    service.deactivateProfile(user.id).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);
@@ -742,7 +742,7 @@ describe('Profile Service', () => {
             User.findOne({ email: MongoDbHelper.inactiveValidUser }).exec().then((user: IUser | null) => {
                 user = user as IUser;
                 try {
-                    service.deactivateProfile(user).subscribe((reason: ProfileFailureReasons) => {
+                    service.deactivateProfile(user.id).subscribe((reason: ProfileFailureReasons) => {
                         reasons.push(reason);
                     }, (error: any) => {
                         fail(error);
@@ -765,29 +765,28 @@ describe('Profile Service', () => {
     it('should fail with a reason of non-existent profile when trying to deactivate a non-existent profile', (done) => {
         const service = new ProfileService();
         const reasons: ProfileFailureReasons[] = new Array<ProfileFailureReasons>();
-        const nonExistentUser: any = {
-            email: invalidUser,
-            password: MongoDbHelper.validPassword,
-            fullName: 'Non-Existent User',
-            birthday: new Date(2000, 0, 1),
-            timeZone: 'Europe/London',
-            isDeactivated: false
-        };
 
-        try {
-            service.deactivateProfile(nonExistentUser).subscribe((reason: ProfileFailureReasons) => {
-                reasons.push(reason);
-            }, (error: any) => {
+        crypto.randomBytes(12, (err: Error, salt: Buffer) => {
+            if (err) {
+                fail(err);
+            }
+
+            const randomId = salt.toString('hex');
+            try {
+                service.deactivateProfile(randomId).subscribe((reason: ProfileFailureReasons) => {
+                    reasons.push(reason);
+                }, (error: any) => {
+                    fail(error);
+                    done();
+                }, () => {
+                    expect(reasons.indexOf(ProfileFailureReasons.NON_EXISTENT_PROFILE) >= 0 && reasons.length === 1).toBe(true);
+                    done();
+                });
+            } catch (error) {
                 fail(error);
                 done();
-            }, () => {
-                expect(reasons.indexOf(ProfileFailureReasons.NON_EXISTENT_PROFILE) >= 0 && reasons.length === 1).toBe(true);
-                done();
-            });
-        } catch (error) {
-            fail(error);
-            done();
-        }
+            }
+        });
     });
 
     it('should fail to confirm an e-mail address for a valid active account with a reason of non-existent profile when given an incorrect confirmation token', (done) => {

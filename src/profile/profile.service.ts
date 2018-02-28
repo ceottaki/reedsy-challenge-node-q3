@@ -128,13 +128,13 @@ export class ProfileService implements IProfileService {
     /**
      * Deactivates the given existing user profile.
      *
-     * @param {IUser} user The user profile to be deactivated.
+     * @param {string} profileId The id of the user profile to be deactivated.
      * @returns {Observable<ProfileFailureReasons>} An observable with possible reasons for failure to deactive a profile.
      * @memberof ProfileService
      */
-    public deactivateProfile(user: IUser): Observable<ProfileFailureReasons> {
+    public deactivateProfile(profileId: string): Observable<ProfileFailureReasons> {
         const result = Observable.create((observer: Observer<ProfileFailureReasons>) => {
-            User.findById(user.id, (findError: any, existingUser: IUser | null) => {
+            User.findById(profileId, (findError: any, existingUser: IUser | null) => {
                 /* istanbul ignore if */
                 if (findError) {
                     observer.onError(findError);

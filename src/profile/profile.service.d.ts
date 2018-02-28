@@ -32,11 +32,11 @@ export interface IProfileService {
     /**
      * When implemented it should deactivate the given existing user profile.
      *
-     * @param {IUser} user The user profile to be deactivated.
+     * @param {string} profileId The id of the user profile to be deactivated.
      * @returns {Observable<ProfileFailureReasons>} An observable with possible reasons for failure to deactive a profile.
      * @memberof IProfileService
      */
-    deactivateProfile(user: IUser): Observable<ProfileFailureReasons>;
+    deactivateProfile(profileId: string): Observable<ProfileFailureReasons>;
 
     /**
      * When implemented it should clean a given profile for presentation to client-side,

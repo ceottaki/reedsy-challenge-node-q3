@@ -55,7 +55,7 @@ export class ProfileController extends BaseController {
                 isAnonymous: false
             },
             {
-                path: this.defaultPath,
+                path: new RegExp(`${this.defaultPath}\\/(\\w+)(\\/)?$`),
                 handler: this.deleteProfile,
                 verbs: [HttpVerbs.DELETE],
                 isAnonymous: false
@@ -245,12 +245,12 @@ export class ProfileController extends BaseController {
 
                 case ProfileFailureReasons.DUPLICATE_EMAIL:
                     res.statusCode = 409;
-                    result.message += 'An account with the new e-mail address already exists. ';
+                    result.message += 'An account with this new e-mail address already exists. ';
                     break;
 
                 case ProfileFailureReasons.INACTIVE_PROFILE:
                     res.statusCode = 401;
-                    result.message += 'The account with the new e-mail address is currently inactive. ';
+                    result.message += 'The account with this new e-mail address is currently inactive. ';
                     break;
 
                 case ProfileFailureReasons.MISSING_REQUIRED:
@@ -260,13 +260,18 @@ export class ProfileController extends BaseController {
 
                 case ProfileFailureReasons.UNCONFIRMED_EMAIL:
                     res.statusCode = 409;
-                    result.message += 'The account with the new e-mail address for this account has not been confirmed yet. ';
+                    result.message += 'The account with this new e-mail address has not been confirmed yet. ';
+                    break;
+
+                case ProfileFailureReasons.NON_EXISTENT_PROFILE:
+                    res.statusCode = 404;
+                    result.message += 'The profile you are trying to update does not exist. ';
                     break;
 
                 case ProfileFailureReasons.UNKNOWN:
                 default:
                     res.statusCode = 500;
-                    result.message += 'There was an unknown error creating your profile. ';
+                    result.message += 'There was an unknown error updating your profile. ';
                     break;
             }
         }, undefined, () => {
@@ -289,12 +294,52 @@ export class ProfileController extends BaseController {
      */
     public deleteProfile(req: Request, res: Response, next: NextFunction): void {
         const user: IUser = req.user as IUser;
+        const profileId: string = req.params[0] as string;
         const result: IStandardResponse = {
             success: false,
-            message: 'This method has not been implemented yet.'
+            message: ''
         };
 
-        res.statusCode = 501;
-        res.json(result);
+        if (user.id !== profileId) {
+            // For now, users are only allowed to deactivate their own profile
+            // since there is no claims or roles implemented as part of this app.
+            res.statusCode = 403;
+            result.message = 'You are not authorised to perform this operation.';
+            res.json(result);
+            return;
+        }
+
+        this.profileService.deactivateProfile(profileId).subscribe((reason: ProfileFailureReasons) => {
+            result.success = reason === ProfileFailureReasons.NONE;
+            switch (reason) {
+                case ProfileFailureReasons.NONE:
+                    res.statusCode = 200;
+                    result.message += 'Your profile has been deactivated successfully. ';
+                    break;
+
+                case ProfileFailureReasons.INACTIVE_PROFILE:
+                    res.statusCode = 401;
+                    result.message += 'The profile you are trying to deactivate was already inactive. ';
+                    break;
+
+                case ProfileFailureReasons.NON_EXISTENT_PROFILE:
+                    res.statusCode = 404;
+                    result.message += 'The profile you are trying to deactivate does not exist. ';
+                    break;
+
+                case ProfileFailureReasons.UNKNOWN:
+                default:
+                    res.statusCode = 500;
+                    result.message += 'There was an unknown error deactivating your profile. ';
+                    break;
+            }
+        }, undefined, () => {
+            // Subscription completed.
+            if (!isUndefined(result.message)) {
+                result.message = result.message.trimRight();
+            }
+
+            res.json(result);
+        });
     }
 }
