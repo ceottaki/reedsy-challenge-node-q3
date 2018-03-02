@@ -31,7 +31,7 @@ export class MongoDbHelper {
      */
     public static openDatabaseConnection(mongooseClient: Mongoose, mongoDbUri: string): Observable<void> {
         const result = Observable.create((observer: Observer<void>) => {
-            mongooseClient.connect(mongoDbUri, { useMongoClient: true }).then(() => {
+            mongooseClient.connect(mongoDbUri, {}).then(() => {
                 observer.onCompleted();
             },
                 /* istanbul ignore next */
@@ -41,15 +41,15 @@ export class MongoDbHelper {
                 });
 
             const mongoDbConnection: Connection = mongooseClient.connection;
-            mongoDbConnection.on('connected', () => {
+            mongoDbConnection.once('connected', () => {
                 console.log('Connected to MongoDB.');
             });
-            mongoDbConnection.on('error',
+            mongoDbConnection.once('error',
                 /* istanbul ignore next */
                 (err: any) => {
                     console.log(`There was a problem connecting to MongoDB: ${err}`);
                 });
-            mongoDbConnection.on('disconnected', () => {
+            mongoDbConnection.once('disconnected', () => {
                 console.log('Disconnected from MongoDB.');
             });
         });
@@ -123,7 +123,7 @@ export class MongoDbHelper {
                         email: MongoDbHelper.inactiveUnconfirmedValidUser,
                         password: MongoDbHelper.validPassword,
                         fullName: 'Inactive Unconfirmed User',
-                        birthday: new Date(2000, 0, 3)
+                        birthday: new Date(2000, 0, 4)
                     }],
                     (err: any, users: IUser[]) => {
                         /* istanbul ignore if */
