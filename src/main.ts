@@ -1,6 +1,12 @@
 import { isUndefined } from 'util';
 
 import { App } from './app';
+import { ExportController } from './export/export.controller';
+import { ExportService } from './export/export.service';
+import { IExportService } from './export/export.service.d';
+import { ImportController } from './import/import.controller';
+import { ImportService } from './import/import.service';
+import { IImportService } from './import/import.service.d';
 import { ProfileController } from './profile/profile.controller';
 import { ProfileService } from './profile/profile.service';
 import { IProfileService } from './profile/profile.service.d';
@@ -23,8 +29,12 @@ const mockData: boolean = isUndefined(process.env.MOCK_MONGODB_DATA)
 const authenticationService: IJwtAuthenticationService = new JwtAuthenticationService(jwsSecret);
 // Creates a singleton instance of the profile service.
 const profileService: IProfileService = new ProfileService();
+// Creates a singleton instance of the export service.
+const exportService: IExportService = new ExportService();
+// Creates a singleton instance of the import service.
+const importService: IImportService = new ImportService();
 
 // Creates the app, adds the available controllers and starts it.
 const app: App = new App(port, jwsSecret, mongoDbUri, mockData);
-app.addControllers([new SessionController(authenticationService), new ProfileController(profileService)]);
+app.addControllers([new SessionController(authenticationService), new ProfileController(profileService), new ExportController(exportService), new ImportController(importService)]);
 app.start();
