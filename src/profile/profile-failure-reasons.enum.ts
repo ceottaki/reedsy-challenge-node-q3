@@ -1,9 +1,0 @@
-export enum ProfileFailureReasons {
-    NONE,
-    DUPLICATE_EMAIL,
-    MISSING_REQUIRED,
-    INACTIVE_PROFILE,
-    UNCONFIRMED_EMAIL,
-    NON_EXISTENT_PROFILE,
-    UNKNOWN
-}

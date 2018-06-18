@@ -1,20 +1,10 @@
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
-import * as mongoose from 'mongoose';
-import * as passport from 'passport';
 
 import { NextFunction, Request, Response, Router } from 'express';
-import { Connection, Mongoose } from 'mongoose';
-import { PassportStatic } from 'passport';
-import { ExtractJwt, Strategy, StrategyOptions, VerifiedCallback } from 'passport-jwt';
 
 import { IController } from './core/controller';
 import { HttpVerbs } from './core/http-verbs.enum';
-import { MongoDbHelper } from './core/mongo-db-helper';
-import { IUser, User } from './core/user.model';
-
-// This is a requirement of Mongoose to set which promise framework it will use.
-(mongoose as any).Promise = global.Promise;
 
 /**
  * Represents the entry point to the application.
@@ -30,12 +20,9 @@ export class App {
     /**
      * Creates an instance of App.
      * @param {number} port The port the application will listen for requests on.
-     * @param {string} jwtSecret The secret to be used to encrypt and decrypt JWT tokens.
-     * @param {string} mongoDbUri The URI to be used when connecting to MongoDB.
-     * @param {boolean} [mockData=false] If set to true mock data will be used instead of a real connection to MongoDB.
      * @memberof App
      */
-    constructor(port: number, jwtSecret: string, mongoDbUri: string, mockData: boolean = false) {
+    constructor(port: number) {
         this.express = express();
         this.port = port;
 
@@ -43,11 +30,6 @@ export class App {
         console.log('Setting up the body parser...');
         this.express.use(bodyParser.urlencoded({ extended: false }));
         this.express.use(bodyParser.json());
-
-        // Sets up passport authentication.
-        console.log('Setting up the passport...');
-        this.express.use(passport.initialize());
-        App.configurePassport(passport, jwtSecret);
 
         // Sets up CORS.
         console.log('Setting up CORS...');
@@ -57,37 +39,7 @@ export class App {
             next();
         });
 
-        // Sets up statically served files.
-        const staticFilesPath = __dirname + '/static';
-        console.log('Setting up statically served files in ' + staticFilesPath + '...');
-        this.express.use(express.static(staticFilesPath));
-
         this.router = express.Router();
-
-        // Sets up the MongoDB connection.
-        console.log('Setting up the MongoDB connection...');
-        if (mockData) {
-            MongoDbHelper.openMockDatabaseConnection(
-                mongoose,
-                mongoDbUri,
-                process.env.HTTP_PROXY !== undefined
-                    ? process.env.HTTP_PROXY as string
-                    : null).subscribeOnCompleted(() => {
-                        MongoDbHelper.resetMockData().subscribeOnCompleted(() => {
-                            MongoDbHelper.createMockData().subscribe();
-                        });
-                    });
-        } else {
-            MongoDbHelper.openDatabaseConnection(mongoose, mongoDbUri).subscribe();
-        }
-
-        // Sets up what happens when the application ends.
-        process.on('SIGINT', () => {
-            mongoose.connection.close(() => {
-                console.log('Closing MongoDB connection.');
-                process.exit(0);
-            });
-        });
     }
 
     /**
@@ -126,42 +78,42 @@ export class App {
                     case HttpVerbs.ALL:
                         this.router.all(
                             routePath,
-                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            this.emptyHandler,
                             route.handler.bind(controller));
                         break;
 
                     case HttpVerbs.DELETE:
                         this.router.delete(
                             routePath,
-                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            this.emptyHandler,
                             route.handler.bind(controller));
                         break;
 
                     case HttpVerbs.GET:
                         this.router.get(
                             routePath,
-                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            this.emptyHandler,
                             route.handler.bind(controller));
                         break;
 
                     case HttpVerbs.PATCH:
                         this.router.patch(
                             routePath,
-                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            this.emptyHandler,
                             route.handler.bind(controller));
                         break;
 
                     case HttpVerbs.POST:
                         this.router.post(
                             routePath,
-                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            this.emptyHandler,
                             route.handler.bind(controller));
                         break;
 
                     case HttpVerbs.PUT:
                         this.router.put(
                             routePath,
-                            route.isAnonymous ? this.emptyHandler : passport.authenticate('jwt', { session: false }),
+                            this.emptyHandler,
                             route.handler.bind(controller));
                         break;
                 }
@@ -177,39 +129,6 @@ export class App {
      */
     public addControllers(controllers: IController[]): void {
         controllers.forEach((c) => this.addController(c));
-    }
-
-    /**
-     * Configures passport for the type of authentication used by this app.
-     *
-     * @private
-     * @static
-     * @param {PassportStatic} ppt The static passport to be configured.
-     * @param {string} jwsSecret The JWT secret to use for encryption.
-     * @memberof App
-     */
-    private static configurePassport(ppt: PassportStatic, jwtSecret: string): void {
-        const options: StrategyOptions = {
-            secretOrKey: jwtSecret,
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
-        };
-
-        const strategy: Strategy = new Strategy(options, (payload: any, done: VerifiedCallback) => {
-            User.findById(payload._id, (err: any, user: IUser | null) => {
-                if (err) {
-                    done(err, null);
-                    return;
-                }
-
-                if (user && !user.isDeactivated && (user.blacklistedTokens.indexOf(payload.jti) < 0)) {
-                    done(null, user, payload.jti);
-                } else {
-                    done(null, null);
-                }
-            });
-        });
-
-        ppt.use(strategy);
     }
 
     /**
