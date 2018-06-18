@@ -2,6 +2,8 @@
     "recommendations": [
         "HookyQR.beautify",
         "EditorConfig.EditorConfig",
-        "eg2.tslint"
+        "eg2.tslint",
+        "joelday.docthis",
+        "hookyqr.jsdoctagcomplete"
     ]
 }

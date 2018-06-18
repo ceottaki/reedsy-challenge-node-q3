@@ -13,7 +13,7 @@ export interface IImportService {
     /**
      * When implemented it should sanitise an import type into the ImportType enum or return null if the given value cannot be sanitised.
      *
-     * @param {any} importType The value to be sanitised.
+     * @param {*} importType The value to be sanitised.
      * @returns {ImportType  |null} The sanitised import type or null if the given value cannot be sanitised.
      * @memberof IImportService
      */

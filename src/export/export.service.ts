@@ -6,9 +6,23 @@ import { ExportRequest } from './export-request.model';
 import { ExportType } from './export-type.enum';
 import { IExportService } from './export.service.d';
 
+/**
+ * Represents an export service that allows export jobs to be created and listed.
+ *
+ * @export
+ * @class ExportService
+ * @implements {IExportService}
+ */
 export class ExportService implements IExportService {
     private exportRequests: ExportRequest[] = [];
 
+    /**
+     * Sanitises an export type into the ExportType enum or return null if the given value cannot be sanitised.
+     *
+     * @param {*} exportType The value to be sanitised.
+     * @returns {(ExportType | null)} The sanitised export type or null if the given value cannot be sanitised.
+     * @memberof ExportService
+     */
     public sanitiseExportType(exportType: any): ExportType | null {
         if (typeof exportType === 'string') {
             if (exportType === 'epub') {
@@ -29,6 +43,13 @@ export class ExportService implements IExportService {
         return null;
     }
 
+    /**
+     * Adds an export request into the list of export requests.
+     *
+     * @param {ExportRequest} exportRequest The export request to be added.
+     * @returns {Observable<boolean>} An observable with an indication of the success of the operation.
+     * @memberof ExportService
+     */
     public addExportRequest(exportRequest: ExportRequest): Observable<boolean> {
         const result = Observable.create((observer: Observer<boolean>) => {
             this.exportRequests.push(exportRequest);
@@ -43,6 +64,12 @@ export class ExportService implements IExportService {
         return result;
     }
 
+    /**
+     * Lists all the existing export requests.
+     *
+     * @returns {Observable<ExportRequest[]>} An observable with the list of all export requests.
+     * @memberof ExportService
+     */
     public listExportRequests(): Observable<ExportRequest[]> {
         const result = Observable.create((observer: Observer<ExportRequest[]>) => {
             observer.onNext(this.exportRequests);

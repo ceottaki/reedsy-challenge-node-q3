@@ -13,7 +13,7 @@ export interface IExportService {
     /**
      * When implemented it should sanitise an export type into the ExportType enum or return null if the given value cannot be sanitised.
      *
-     * @param {any} exportType The value to be sanitised.
+     * @param {*} exportType The value to be sanitised.
      * @returns {ExportType  |null} The sanitised export type or null if the given value cannot be sanitised.
      * @memberof IExportService
      */
