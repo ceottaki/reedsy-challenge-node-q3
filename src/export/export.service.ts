@@ -78,4 +78,23 @@ export class ExportService implements IExportService {
 
         return result;
     }
+
+    /**
+     * Prepares a list of export requests for output by replacing numeric flags with readable strings.
+     *
+     * @param {ExportRequest[]} exportRequests The list of export requests to be prepared.
+     * @returns {any[]} An array of the export requests, prepared for output.
+     * @memberof ExportService
+     */
+    public prepareForOutput(exportRequests: ExportRequest[]): any[] {
+        const result = new Array();
+        exportRequests.forEach((er: ExportRequest) => {
+            const preparedExportRequest = { ...er as any };
+            preparedExportRequest.type = ExportType[er.type].toLowerCase();
+            preparedExportRequest.state = State[er.state].toLowerCase();
+            result.push(preparedExportRequest);
+        });
+
+        return result;
+    }
 }

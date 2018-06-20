@@ -14,7 +14,7 @@ export interface IExportService {
      * When implemented it should sanitise an export type into the ExportType enum or return null if the given value cannot be sanitised.
      *
      * @param {*} exportType The value to be sanitised.
-     * @returns {ExportType  |null} The sanitised export type or null if the given value cannot be sanitised.
+     * @returns {ExportType  | null} The sanitised export type or null if the given value cannot be sanitised.
      * @memberof IExportService
      */
     sanitiseExportType(exportType: any): ExportType | null;
@@ -35,4 +35,13 @@ export interface IExportService {
      * @memberof IExportService
      */
     listExportRequests(): Observable<ExportRequest[]>;
+
+    /**
+     * When implemented it should prepare a list of export requests for output by replacing numeric flags with readable strings.
+     *
+     * @param {ExportRequest[]} exportRequests The list of export requests to be prepared.
+     * @returns {any[]} An array of the export requests, prepared for output.
+     * @memberof IExportService
+     */
+    prepareForOutput(exportRequests: ExportRequest[]): any[];
 }

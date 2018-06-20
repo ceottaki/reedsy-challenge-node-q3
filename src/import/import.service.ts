@@ -88,4 +88,23 @@ export class ImportService implements IImportService {
 
         return result;
     }
+
+    /**
+     * Prepares a list of import requests for output by replacing numeric flags with readable strings.
+     *
+     * @param {ImportRequest[]} importRequests The list of import requests to be prepared.
+     * @returns {any[]} An array of the import requests, prepared for output.
+     * @memberof ImportService
+     */
+    public prepareForOutput(importRequests: ImportRequest[]): any[] {
+        const result = new Array();
+        importRequests.forEach((er: ImportRequest) => {
+            const preparedExportRequest = { ...er as any };
+            preparedExportRequest.type = ImportType[er.type].toLowerCase();
+            preparedExportRequest.state = State[er.state].toLowerCase();
+            result.push(preparedExportRequest);
+        });
+
+        return result;
+    }
 }

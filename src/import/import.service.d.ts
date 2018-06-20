@@ -35,4 +35,13 @@ export interface IImportService {
      * @memberof IImportService
      */
     listImportRequests(): Observable<ImportRequest[]>;
+
+    /**
+     * When implemented it should prepare a list of import requests for output by replacing numeric flags with readable strings.
+     *
+     * @param {ImportRequest[]} importRequests The list of import requests to be prepared.
+     * @returns {any[]} An array of the import requests, prepared for output.
+     * @memberof IImportService
+     */
+    prepareForOutput(importRequests: ImportRequest[]): any[];
 }

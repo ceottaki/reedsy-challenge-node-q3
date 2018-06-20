@@ -102,7 +102,7 @@ export class ExportController extends BaseController {
 
         this.exportService.listExportRequests().subscribe((exportRequests: ExportRequest[]) => {
             result.success = true;
-            result.data = exportRequests;
+            result.data = this.exportService.prepareForOutput(exportRequests);
         }, undefined, (() => {
             res.statusCode = result.success ? 201 : 401;
             res.json(result);
