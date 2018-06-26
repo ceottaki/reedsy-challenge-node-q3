@@ -89,12 +89,44 @@ export class ExportService implements IExportService {
     public prepareForOutput(exportRequests: ExportRequest[]): any[] {
         const result = new Array();
         exportRequests.forEach((er: ExportRequest) => {
-            const preparedExportRequest = { ...er as any };
-            preparedExportRequest.type = ExportType[er.type].toLowerCase();
-            preparedExportRequest.state = State[er.state].toLowerCase();
-            result.push(preparedExportRequest);
+            result.push(this.prepareRequestForOutput(er));
         });
 
         return result;
+    }
+
+    /**
+     * Groups export requests by state and replace numeric flags with readable strings for output.
+     *
+     * @param {ExportRequest[]} exportRequests
+     * @returns {*}
+     * @memberof ExportService
+     */
+    public groupByStateForOutput(exportRequests: ExportRequest[]): any {
+        const result: any = {};
+        exportRequests.forEach((er: ExportRequest) => {
+            if (!result[State[er.state].toLowerCase()]) {
+                result[State[er.state].toLowerCase()] = [];
+            }
+
+            result[State[er.state].toLowerCase()].push(this.prepareRequestForOutput(er));
+        });
+
+        return result;
+    }
+
+    /**
+     * Prepares an export request for output by replacing numeric flags with readable strings.
+     *
+     * @private
+     * @param {ExportRequest} exportRequest The export request to be prepared.
+     * @returns {*} The export request prepared for output.
+     * @memberof ExportService
+     */
+    private prepareRequestForOutput(exportRequest: ExportRequest): any {
+        const preparedExportRequest = { ...exportRequest as any };
+        preparedExportRequest.type = ExportType[exportRequest.type].toLowerCase();
+        preparedExportRequest.state = State[exportRequest.state].toLowerCase();
+        return preparedExportRequest;
     }
 }

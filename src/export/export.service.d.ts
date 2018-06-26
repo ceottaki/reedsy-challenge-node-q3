@@ -44,4 +44,13 @@ export interface IExportService {
      * @memberof IExportService
      */
     prepareForOutput(exportRequests: ExportRequest[]): any[];
+
+    /**
+     * When implemented it should group export requests by state and replace numeric flags with readable strings for output.
+     *
+     * @param {ExportRequest[]} exportRequests The list of export requests to be grouped and prepared.
+     * @returns {*} An object with properties equivalent to each state, containing and array of export requests prepared for output.
+     * @memberof IExportService
+     */
+    groupByStateForOutput(exportRequests: ExportRequest[]): any;
 }

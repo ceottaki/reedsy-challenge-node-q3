@@ -98,13 +98,45 @@ export class ImportService implements IImportService {
      */
     public prepareForOutput(importRequests: ImportRequest[]): any[] {
         const result = new Array();
-        importRequests.forEach((er: ImportRequest) => {
-            const preparedExportRequest = { ...er as any };
-            preparedExportRequest.type = ImportType[er.type].toLowerCase();
-            preparedExportRequest.state = State[er.state].toLowerCase();
-            result.push(preparedExportRequest);
+        importRequests.forEach((ir: ImportRequest) => {
+            result.push(this.prepareRequestForOutput(ir));
         });
 
         return result;
+    }
+
+    /**
+     * Groups import requests by state and replace numeric flags with readable strings for output.
+     *
+     * @param {ImportRequest[]} importRequests
+     * @returns {*}
+     * @memberof ImportService
+     */
+    public groupByStateForOutput(importRequests: ImportRequest[]): any {
+        const result: any = {};
+        importRequests.forEach((ir: ImportRequest) => {
+            if (!result[State[ir.state].toLowerCase()]) {
+                result[State[ir.state].toLowerCase()] = [];
+            }
+
+            result[State[ir.state].toLowerCase()].push(this.prepareRequestForOutput(ir));
+        });
+
+        return result;
+    }
+
+    /**
+     * Prepares an import request for output by replacing numeric flags with readable strings.
+     *
+     * @private
+     * @param {ImportRequest} importRequest The import request to be prepared.
+     * @returns {*} The import request prepared for output.
+     * @memberof ImportService
+     */
+    private prepareRequestForOutput(importRequest: ImportRequest): any {
+        const preparedImportRequest = { ...importRequest as any };
+        preparedImportRequest.type = ImportType[importRequest.type].toLowerCase();
+        preparedImportRequest.state = State[importRequest.state].toLowerCase();
+        return preparedImportRequest;
     }
 }

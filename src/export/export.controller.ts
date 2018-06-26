@@ -1,6 +1,4 @@
 import { NextFunction, Request, Response } from 'express';
-import { ValidationError } from 'mongoose';
-import { isUndefined } from 'util';
 
 import { BaseController } from '../core/base.controller';
 import { HttpVerbs } from '../core/http-verbs.enum';
@@ -64,27 +62,26 @@ export class ExportController extends BaseController {
             res.statusCode = 400;
             res.json(result);
             return;
-        } else {
-            const exportType: ExportType | null = this.exportService.sanitiseExportType(req.body.type);
-            if (exportType === null) {
-                result.success = false;
-                result.message = 'The export type is invalid.';
-                res.statusCode = 400;
-                res.json(result);
-                return;
-            } else {
-                this.exportService.addExportRequest(new ExportRequest(req.body.bookId, exportType)).subscribe((success: boolean) => {
-                    result.success = success;
-                    result.message = success
-                        ? 'Your request to create a new export job was successful.'
-                        : 'There was a problem creating a new export job.';
-                    res.statusCode = success ? 201 : 500;
-
-                }, undefined, () => {
-                    res.json(result);
-                });
-            }
         }
+
+        const exportType: ExportType | null = this.exportService.sanitiseExportType(req.body.type);
+        if (exportType === null) {
+            result.success = false;
+            result.message = 'The export type is invalid.';
+            res.statusCode = 400;
+            res.json(result);
+            return;
+        }
+
+        this.exportService.addExportRequest(new ExportRequest(req.body.bookId, exportType)).subscribe((success: boolean) => {
+            result.success = success;
+            result.message = success
+                ? 'Your request to create a new export job was successful.'
+                : 'There was a problem creating a new export job.';
+            res.statusCode = success ? 201 : 500;
+        }, undefined, () => {
+            res.json(result);
+        });
     }
 
     /**
@@ -102,7 +99,7 @@ export class ExportController extends BaseController {
 
         this.exportService.listExportRequests().subscribe((exportRequests: ExportRequest[]) => {
             result.success = true;
-            result.data = this.exportService.prepareForOutput(exportRequests);
+            result.data = this.exportService.groupByStateForOutput(exportRequests);
         }, undefined, (() => {
             res.statusCode = result.success ? 201 : 500;
             res.json(result);

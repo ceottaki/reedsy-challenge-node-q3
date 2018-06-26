@@ -44,4 +44,13 @@ export interface IImportService {
      * @memberof IImportService
      */
     prepareForOutput(importRequests: ImportRequest[]): any[];
+
+    /**
+     * When implemented it should group import requests by state and replace numeric flags with readable strings for output.
+     *
+     * @param {ImportRequest[]} importRequests The list of import requests to be grouped and prepared.
+     * @returns {*} An object with properties equivalent to each state, containing and array of import requests prepared for output.
+     * @memberof IImportService
+     */
+    groupByStateForOutput(importRequests: ImportRequest[]): any;
 }

@@ -1,6 +1,4 @@
 import { NextFunction, Request, Response } from 'express';
-import { ValidationError } from 'mongoose';
-import { isUndefined } from 'util';
 
 import { BaseController } from '../core/base.controller';
 import { HttpVerbs } from '../core/http-verbs.enum';
@@ -63,27 +61,27 @@ export class ImportController extends BaseController {
             res.statusCode = 400;
             res.json(result);
             return;
-        } else {
-            const importType: ImportType | null = this.importService.sanitiseImportType(req.body.type);
-            if (importType === null) {
-                result.success = false;
-                result.message = 'The import type is invalid.';
-                res.statusCode = 400;
-                res.json(result);
-                return;
-            } else {
-                this.importService.addImportRequest(
-                    new ImportRequest(req.body.bookId, importType, req.body.url)).subscribe((success: boolean) => {
-                        result.success = success;
-                        result.message = success
-                            ? 'Your request to create a new import job was successful.'
-                            : 'There was a problem creating a new import job.';
-                        res.statusCode = success ? 201 : 500;
-                    }, undefined, () => {
-                        res.json(result);
-                    });
-            }
         }
+
+        const importType: ImportType | null = this.importService.sanitiseImportType(req.body.type);
+        if (importType === null) {
+            result.success = false;
+            result.message = 'The import type is invalid.';
+            res.statusCode = 400;
+            res.json(result);
+            return;
+        }
+
+        this.importService.addImportRequest(
+            new ImportRequest(req.body.bookId, importType, req.body.url)).subscribe((success: boolean) => {
+                result.success = success;
+                result.message = success
+                    ? 'Your request to create a new import job was successful.'
+                    : 'There was a problem creating a new import job.';
+                res.statusCode = success ? 201 : 500;
+            }, undefined, () => {
+                res.json(result);
+            });
     }
 
     /**
@@ -101,7 +99,7 @@ export class ImportController extends BaseController {
 
         this.importService.listImportRequests().subscribe((importRequests: ImportRequest[]) => {
             result.success = true;
-            result.data = this.importService.prepareForOutput(importRequests);
+            result.data = this.importService.groupByStateForOutput(importRequests);
         }, undefined, (() => {
             res.statusCode = result.success ? 201 : 500;
             res.json(result);
