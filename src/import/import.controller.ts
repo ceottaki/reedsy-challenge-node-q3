@@ -103,7 +103,7 @@ export class ImportController extends BaseController {
             result.success = true;
             result.data = this.importService.prepareForOutput(importRequests);
         }, undefined, (() => {
-            res.statusCode = result.success ? 201 : 401;
+            res.statusCode = result.success ? 201 : 500;
             res.json(result);
         }));
     }

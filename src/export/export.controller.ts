@@ -104,7 +104,7 @@ export class ExportController extends BaseController {
             result.success = true;
             result.data = this.exportService.prepareForOutput(exportRequests);
         }, undefined, (() => {
-            res.statusCode = result.success ? 201 : 401;
+            res.statusCode = result.success ? 201 : 500;
             res.json(result);
         }));
     }
